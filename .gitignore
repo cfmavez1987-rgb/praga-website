@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.txt
+*.jpeg
+node_modules/

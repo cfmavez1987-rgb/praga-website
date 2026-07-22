@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ПРАГА — Разливное пиво и закуски | Актау</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0D0B08; --card:#1A1714; --amber:#D4940A; --amber-l:#F5B731; --gold:#C9A84C; --cream:#F5E6C8; --txt:#F2E8D5; --txt2:#A89B8C; --txt3:#6B6055; --brd:#2A2520; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden}
+
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;background:rgba(13,11,8,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd)}
+        .logo{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--amber);text-decoration:none}
+        .nav-links{display:flex;gap:2rem;list-style:none}
+        .nav-links a{color:var(--txt2);text-decoration:none;font-size:0.9rem;font-weight:500}
+        .nav-links a:hover{color:var(--txt)}
+        .nav-cta{background:var(--amber);color:var(--bg)!important;padding:.6rem 1.4rem;border-radius:8px;font-weight:600}
+        .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:5px}
+        .burger span{width:24px;height:2px;background:var(--txt)}
+        .lang-switch{display:flex;gap:4px;margin-left:1rem}
+        .lang-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--brd);background:transparent;color:var(--txt2);font-size:.8rem;cursor:pointer;transition:all .2s}
+        .lang-btn.active{background:var(--amber);color:var(--bg);border-color:var(--amber)}
+        .lang-btn:hover{border-color:var(--amber)}
+
+        .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative;overflow:hidden}
+        .hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+        .hero::before{content:'';position:absolute;inset:0;background:rgba(13,11,8,0.6);z-index:1}
+        .hero::after{content:'';position:absolute;inset:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 50%,rgba(212,148,10,0.08)0%,transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(201,168,76,0.05)0%,transparent 50%);animation:glow 8s ease-in-out infinite alternate;z-index:1}
+        @keyframes glow{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(-5%,3%) rotate(2deg)}}
+        .hero-content{position:relative;z-index:2;max-width:800px}
+        .hero-badge{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1.2rem;background:rgba(212,148,10,0.1);border:1px solid rgba(212,148,10,0.2);border-radius:100px;font-size:.85rem;color:var(--amber);margin-bottom:2rem}
+        .hero h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,8vw,6rem);font-weight:900;line-height:1.05;margin-bottom:1.5rem;background:linear-gradient(135deg,var(--cream),var(--gold),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero p{font-size:1.2rem;color:var(--txt2);max-width:550px;margin:0 auto 2.5rem;line-height:1.7}
+        .hero-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+        .btn-primary{background:var(--amber);color:var(--bg);padding:1rem 2.5rem;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem;transition:all .3s}
+        .btn-primary:hover{background:var(--amber-l);transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,148,10,0.3)}
+        .btn-secondary{background:transparent;color:var(--txt);padding:1rem 2.5rem;border:1px solid var(--brd);border-radius:10px;font-size:1rem;font-weight:500;cursor:pointer;text-decoration:none;transition:all .3s}
+        .btn-secondary:hover{border-color:var(--amber);color:var(--amber)}
+
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd)}
+        .stat{background:var(--card);padding:2.5rem 2rem;text-align:center}
+        .stat-number{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;color:var(--amber);margin-bottom:.5rem}
+        .stat-label{font-size:.85rem;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em}
+
+        section{padding:6rem 2rem}
+        .container{max-width:1200px;margin:0 auto}
+        .section-header{text-align:center;margin-bottom:4rem}
+        .section-tag{font-size:.8rem;text-transform:uppercase;letter-spacing:.15em;color:var(--amber);margin-bottom:1rem;display:block}
+        .section-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;margin-bottom:1rem}
+        .section-desc{color:var(--txt2);max-width:600px;margin:0 auto;font-size:1.05rem}
+
+        .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem}
+        .feature-card{background:var(--card);border:1px solid var(--brd);border-radius:20px;padding:2.5rem;transition:all .4s}
+        .feature-card:hover{transform:translateY(-4px);border-color:rgba(212,148,10,0.2)}
+        .feature-icon{width:56px;height:56px;background:rgba(212,148,10,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1.5rem}
+        .feature-card h3{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;margin-bottom:.8rem}
+        .feature-card p{color:var(--txt2);font-size:.95rem;line-height:1.7}
+
+        /* DRINKS */
+        .drinks-section{background:linear-gradient(180deg,#1A1508,#2A1F0A 20%,#3D2E0C 40%,#4A380D 60%,#3D2E0C 80%,#2A1F0A);position:relative;overflow:hidden;min-height:700px}
+        .drinks-section::before{content:'';position:absolute;top:0;left:0;right:0;height:80px;background:linear-gradient(180deg,rgba(245,230,200,0.08),transparent);pointer-events:none}
+        .drinks-section::after{content:'';position:absolute;inset:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(255,220,100,0.06)0%,transparent 40%),radial-gradient(ellipse at 70% 80%,rgba(255,200,50,0.04)0%,transparent 35%);pointer-events:none}
+        .drinks-container{position:relative;width:100%;height:600px;max-width:1200px;margin:0 auto}
+        #beerBubblesBg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+        .beer-bubble-bg{position:absolute;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,220,100,0.15),rgba(255,200,50,0.05)50%,transparent 70%);animation:bgRise linear infinite}
+        @keyframes bgRise{0%{transform:translateY(100vh) scale(.5);opacity:0}10%{opacity:.6}90%{opacity:.6}100%{transform:translateY(-100vh) scale(1);opacity:0}}
+
+        .bubble{position:absolute;border-radius:50%;cursor:pointer;z-index:1;overflow:hidden;border:2px solid rgba(255,255,255,0.25);box-shadow:0 0 20px rgba(212,148,10,0.15);transition:box-shadow .3s}
+        .bubble:hover{z-index:10;box-shadow:0 0 35px rgba(212,148,10,0.4)}
+        .bubble-img{width:140%;height:140%;object-fit:cover;display:block;border-radius:50%;margin:-20%;background:var(--card)}
+
+        /* Card popup */
+        .drink-card-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;max-width:90vw;background:rgba(26,23,20,0.98);border:1px solid rgba(212,148,10,0.4);border-radius:24px;padding:32px;z-index:1000;box-shadow:0 30px 100px rgba(0,0,0,0.8),0 0 60px rgba(212,148,10,0.2);animation:cardIn .4s cubic-bezier(0.16,1,0.3,1) forwards}
+        @keyframes cardIn{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}60%{transform:translate(-50%,-50%) scale(1.05)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+        .card-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1rem;color:rgba(255,255,255,0.6);cursor:pointer}
+        .card-close:hover{background:rgba(255,255,255,0.2);color:white}
+        .card-img-wrapper{animation:float 3s ease-in-out infinite}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .card-img-wrapper{overflow:hidden;border-radius:50%;width:240px;height:240px;background:var(--card);margin:0 auto 20px}
+        .card-img{width:160%;height:160%;object-fit:cover;margin:-30%;filter:drop-shadow(0 10px 30px rgba(212,148,10,0.3))}
+        .card-title{font-family:'Playfair Display',serif;font-size:1.5rem;text-align:center;margin-bottom:6px;color:var(--cream)}
+        .card-type{font-size:.85rem;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:16px}
+        .card-desc{font-size:.9rem;color:rgba(255,255,255,0.8);line-height:1.7;text-align:center}
+
+        /* Particles */
+        .particle{position:absolute;border-radius:50%;pointer-events:none;animation:fly .8s ease-out forwards}
+        @keyframes fly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+        .splash{position:absolute;width:60px;height:60px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);pointer-events:none;animation:splash .6s ease-out forwards}
+        @keyframes splash{0%{transform:scale(0);opacity:1}100%{transform:scale(3);opacity:0}}
+
+        .usp-section{background:var(--card);border-top:1px solid var(--brd);border-bottom:1px solid var(--brd)}
+        .usp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:3rem}
+        .usp-item{text-align:center}
+        .usp-number{font-family:'Playfair Display',serif;font-size:4rem;font-weight:900;color:rgba(212,148,10,0.15);margin-bottom:1rem;line-height:1}
+        .usp-item h3{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:1rem}
+        .usp-item p{color:var(--txt2);font-size:.95rem;line-height:1.7}
+
+        .testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+        .testimonial-card{background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:2rem}
+        .testimonial-stars{color:var(--amber);margin-bottom:1rem;letter-spacing:2px}
+        .testimonial-card blockquote{font-size:1rem;line-height:1.7;color:var(--txt2);margin-bottom:1.5rem;font-style:italic}
+        .testimonial-author{display:flex;align-items:center;gap:1rem}
+        .author-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--bg);font-size:.9rem}
+        .author-name{font-weight:600;font-size:.95rem}
+        .author-role{font-size:.8rem;color:var(--txt3)}
+
+        .app-promo{background:var(--card);border-top:1px solid var(--brd);border-bottom:1px solid var(--brd)}
+        .app-promo-content{display:flex;align-items:center;gap:4rem;max-width:1000px;margin:0 auto}
+        .app-promo-text h2{font-family:'Playfair Display',serif;font-size:2.2rem;margin-bottom:1rem}
+        .app-promo-text p{color:var(--txt2);font-size:1.05rem;margin-bottom:2rem;line-height:1.7}
+        .app-features{list-style:none;margin-bottom:2rem}
+        .app-features li{display:flex;align-items:center;gap:.8rem;padding:.5rem 0;color:var(--txt2)}
+        .app-features li span{color:var(--amber);font-size:1.2rem}
+        .app-promo-visual{flex:0 0 300px;display:flex;justify-content:center}
+        .phone-mockup{width:220px;height:440px;background:var(--bg);border:3px solid var(--brd);border-radius:30px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+        .phone-mockup::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80px;height:24px;background:var(--bg);border-radius:0 0 12px 12px;z-index:2}
+        .phone-screen{position:absolute;inset:8px;background:linear-gradient(180deg,var(--card),var(--bg));border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px 20px}
+        .phone-screen .phone-logo{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--amber);margin-bottom:8px}
+        .phone-screen .phone-tagline{font-size:.75rem;color:var(--txt3);margin-bottom:24px}
+        .phone-screen .phone-items{width:100%;display:flex;flex-direction:column;gap:8px}
+        .phone-screen .phone-item{background:var(--bg-card-hover);border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;font-size:.7rem;color:var(--txt2)}
+        .phone-screen .phone-item span:first-child{font-size:1.2rem}
+
+        .cta-section{background:linear-gradient(135deg,#1A1714,#0D0B08 50%,#1A1714);text-align:center;position:relative;overflow:hidden}
+        .cta-content{position:relative;z-index:1}
+        .cta-section h2{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:700;margin-bottom:1.5rem}
+        .cta-section p{color:var(--txt2);font-size:1.1rem;margin-bottom:2.5rem;max-width:500px;margin-left:auto;margin-right:auto}
+        .cta-contact{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+        .contact-item{display:flex;align-items:center;gap:.6rem;color:var(--txt2);font-size:.95rem}
+        .contact-item span:first-child{font-size:1.2rem}
+
+        footer{border-top:1px solid var(--brd);padding:3rem 2rem}
+        .footer-content{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+        .footer-logo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--amber)}
+        .footer-text{color:var(--txt3);font-size:.85rem}
+        .footer-links{display:flex;gap:1.5rem}
+        .footer-links a{color:var(--txt3);text-decoration:none;font-size:.85rem}
+        .footer-links a:hover{color:var(--amber)}
+
+        .mobile-menu{display:none;position:fixed;inset:0;background:rgba(13,11,8,0.98);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:2rem}
+        .mobile-menu.active{display:flex}
+        .mobile-menu a{color:var(--txt);text-decoration:none;font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700}
+        .mobile-menu a:hover{color:var(--amber)}
+        .mobile-close{position:absolute;top:1.5rem;right:2rem;font-size:2rem;color:var(--txt);cursor:pointer;background:none;border:none}
+
+        @media(max-width:768px){
+            .nav-links{display:none}.burger{display:flex}
+            .stats{grid-template-columns:repeat(2,1fr)}.stat{padding:1.5rem 1rem}.stat-number{font-size:1.8rem}
+            section{padding:4rem 1.5rem}.features-grid{grid-template-columns:1fr}
+            .drinks-container{height:450px}
+            .usp-grid{grid-template-columns:1fr;gap:2rem}.testimonials-grid{grid-template-columns:1fr}
+            .hero-buttons{flex-direction:column;align-items:center}
+            .app-promo-content{flex-direction:column;text-align:center}.app-promo-visual{flex:none}
+            .footer-content{flex-direction:column;text-align:center}
+        }
+        @media(max-width:480px){.stats{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <a href="#" class="logo">ПРАГА</a>
+        <ul class="nav-links">
+            <li><a href="#about" data-ru="О нас" data-kz="Біз туралы">О нас</a></li>
+            <li><a href="#drinks" data-ru="Напитки" data-kz="Сусындар">Напитки</a></li>
+            <li><a href="#app" data-ru="Приложение" data-kz="Қосымша">Приложение</a></li>
+            <li><a href="#why" data-ru="Преимущества" data-kz="Артықшылықтар">Преимущества</a></li>
+            <li><a href="#reviews" data-ru="Отзывы" data-kz="Пікірлер">Отзывы</a></li>
+            <li><a href="#contacts" class="nav-cta" data-ru="Контакты" data-kz="Байланыс">Контакты</a></li>
+        </ul>
+        <div class="lang-switch">
+            <button class="lang-btn active" onclick="setLang('ru')">RU</button>
+            <button class="lang-btn" onclick="setLang('kz')">KZ</button>
+        </div>
+        <div class="burger" onclick="document.getElementById('mobileMenu').classList.toggle('active')"><span></span><span></span><span></span></div>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-close" onclick="this.parentElement.classList.remove('active')">&times;</button>
+        <a href="#about" onclick="this.parentElement.classList.remove('active')" data-ru="О нас" data-kz="Біз туралы">О нас</a>
+        <a href="#drinks" onclick="this.parentElement.classList.remove('active')" data-ru="Напитки" data-kz="Сусындар">Напитки</a>
+        <a href="#app" onclick="this.parentElement.classList.remove('active')" data-ru="Приложение" data-kz="Қосымша">Приложение</a>
+        <a href="#why" onclick="this.parentElement.classList.remove('active')" data-ru="Преимущества" data-kz="Артықшылықтар">Преимущества</a>
+        <a href="#reviews" onclick="this.parentElement.classList.remove('active')" data-ru="Отзывы" data-kz="Пікірлер">Отзывы</a>
+        <a href="#contacts" onclick="this.parentElement.classList.remove('active')" data-ru="Контакты" data-kz="Байланыс">Контакты</a>
+    </div>
+
+    <section class="hero">
+        <video class="hero-video" autoplay muted loop playsinline>
+            <source src="Friends_clinking.mp4" type="video/mp4">
+        </video>
+        <div class="hero-content">
+            <div class="hero-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 1 1 0-5c.78 0 1.57.5 2.5.5s2-.5 3-.5 1.72.5 2.5.5a2.5 2.5 0 1 0 0-5c-.78 0-1.5.5-2.5.5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg> <span data-ru="Разливное пиво и закуски" data-kz="Құйылған сыра және тағамдар">Разливное пиво и закуски</span></div>
+            <h1>ПРАГА</h1>
+            <p data-ru="Честная свежесть с прозрачными датами розлива. Собери свой микс из снеков на развес." data-kz="Ашық құйылу күндерімен адал тазалық. Өз миксіңізді таңдаңыз.">Честная свежесть с прозрачными датами розлива. Собери свой микс из снеков на развес.</p>
+            <div class="hero-buttons">
+                <a href="#app" class="btn-primary" data-ru="Скачать приложение →" data-kz="Қосымшаны жүктеу →">Скачать приложение →</a>
+                <a href="#contacts" class="btn-secondary" data-ru="Как нас найти" data-kz="Бізді қалай табуға болады">Как нас найти</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="stats">
+        <div class="stat"><div class="stat-number">20+</div><div class="stat-label" data-ru="Сортов пива" data-kz="Сыра түрлері">Сортов пива</div></div>
+        <div class="stat"><div class="stat-number">50+</div><div class="stat-label" data-ru="Видов снеков" data-kz="Тағам түрлері">Видов снеков</div></div>
+        <div class="stat"><div class="stat-number">100%</div><div class="stat-label" data-ru="Гарантия свежести" data-kz="Тазалық кепілдігі">Гарантия свежести</div></div>
+        <div class="stat"><div class="stat-number">5 мин</div><div class="stat-label" data-ru="Быстрое обслуживание" data-kz="Жылдам қызмет">Быстрое обслуживание</div></div>
+    </div>
+
+    <section id="about">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag" data-ru="О магазине" data-kz="Дүкен туралы">О магазине</span>
+                <h2 class="section-title" data-ru="Больше, чем просто магазин" data-kz="Дүкеннен де көп нәрсе">Больше, чем просто магазин</h2>
+                <p class="section-desc" data-ru="Мы — место, где каждый найдёт что-то для себя." data-kz="Біз — әркім өзіне лайықты нәрсе табатын жерміз.">Мы — место, где каждый найдёт что-то для себя.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 1 1 0-5c.78 0 1.57.5 2.5.5s2-.5 3-.5 1.72.5 2.5.5a2.5 2.5 0 1 0 0-5c-.78 0-1.5.5-2.5.5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg></div><h3 data-ru="Разливное пиво" data-kz="Құйылған сыра">Разливное пиво</h3><p data-ru="Более 20 сортов пива. Каждый кран — гарантия свежести." data-kz="20-ден астам сыра түрі. Әр кранның өзі — тазалық кепілдігі.">Более 20 сортов пива. Каждый кран — гарантия свежести.</p></div>
+                <div class="feature-card"><div class="feature-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg></div><h3 data-ru="Снеки на развес" data-kz="Тағамдар өлшеніммен">Снеки на развес</h3><p data-ru="Собери свой микс: орехи, сухарики, чипсы, сушёная рыба и многое другое." data-kz="Өз миксіңізді жинаңыз: жаңғақ, крекер, чипс, кептірілген балық және т.б.">Собери свой микс: орехи, сухарики, чипсы, сушёная рыба и многое другое.</p></div>
+                <div class="feature-card"><div class="feature-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><h3 data-ru="Честная свежесть" data-kz="Адал тазалық">Честная свежесть</h3><p data-ru="Прозрачные даты розлива на каждом кране. Заменим без вопросов." data-kz="Әр кранның ашық құйылу күндері. Сұрақсыз ауыстырамыз.">Прозрачные даты розлива на каждом кране. Заменим без вопросов.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="drinks" class="drinks-section">
+        <div id="beerBubblesBg"></div>
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag" data-ru="Наш ассортимент" data-kz="Біздің ассортимент">Наш ассортимент</span>
+                <h2 class="section-title" data-ru="Напитки на разлив" data-kz="Құйылған сусындар">Напитки на разлив</h2>
+                <p class="section-desc" data-ru="Нажмите на пузырёк чтобы узнать подробнее" data-kz="Толығырақ білу үшін көпіршікке басыңыз">Нажмите на пузырёк чтобы узнать подробнее</p>
+            </div>
+        </div>
+        <div class="drinks-container" id="drinksContainer"></div>
+    </section>
+
+    <section id="app" class="app-promo">
+        <div class="container">
+            <div class="app-promo-content">
+                <div class="app-promo-text">
+                    <span class="section-tag" data-ru="Мобильное приложение" data-kz="Мобильді қосымша">Мобильное приложение</span>
+                    <h2 data-ru="Заказывайте прямо с телефона" data-kz="Телефоннан тікелей тапсырыс жасаңыз">Заказывайте прямо с телефона</h2>
+                    <p data-ru="Скачайте наше приложение для удобного каталога и быстрого заказа." data-kz="Ыңғайлы каталог пен жылдам тапсырыс үшін қосымшамызды жүктеп алыңыз.">Скачайте наше приложение для удобного каталога и быстрого заказа.</p>
+                    <ul class="app-features">
+                        <li><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span> <span data-ru="Полный каталог с ценами" data-kz="Бағалармен толық каталог">Полный каталог с ценами</span></li>
+                        <li><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span> <span data-ru="Быстрый заказ в 2 клика" data-kz="2 басумен жылдам тапсырыс">Быстрый заказ в 2 клика</span></li>
+                        <li><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span> <span data-ru="История покупок" data-kz="Сатып алу тарихы">История покупок</span></li>
+                        <li><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span> <span data-ru="Уведомления о новинках" data-kz="Жаңалықтар туралы хабарландырулар">Уведомления о новинках</span></li>
+                    </ul>
+                    <a href="app.html" class="btn-primary" data-ru="Открыть приложение →" data-kz="Қосымшаны ашу →">Открыть приложение →</a>
+                </div>
+                <div class="app-promo-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="phone-logo">ПРАГА</div>
+                            <div class="phone-tagline">Разливное пиво и закуски</div>
+                            <div class="phone-items">
+                                <div class="phone-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg></span> Пиво на разлив</div>
+                                <div class="phone-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/></svg></span> Снеки на развес</div>
+                                <div class="phone-item"><span>🍣</span> Закуски</div>
+                                <div class="phone-item"><span>📦</span> Мои заказы</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="why" class="usp-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag" data-ru="Почему мы" data-kz="Неліктен біз">Почему мы</span>
+                <h2 class="section-title" data-ru="Наши преимущества" data-kz="Біздің артықшылықтарымыз">Наши преимущества</h2>
+            </div>
+            <div class="usp-grid">
+                <div class="usp-item"><div class="usp-number"></div><h3 data-ru="Честная свежесть" data-kz="Адал тазалық">Честная свежесть</h3><p data-ru="На каждом кране — дата розлива. Заменим без вопросов." data-kz="Әр кранның өзі — құйылу күні. Сұрақсыз ауыстырамыз.">На каждом кране — дата розлива. Заменим без вопросов.</p></div>
+                <div class="usp-item"><div class="usp-number"></div><h3 data-ru="Собери свой микс" data-kz="Өз миксіңізді жинаңыз">Собери свой микс</h3><p data-ru="Более 50 видов снеков на развес. Честный вес без обмана." data-kz="50-ден астам тағам түрі өлшеніммен. Адал салмақ, алдаусыз.">Более 50 видов снеков на развес. Честный вес без обмана.</p></div>
+                <div class="usp-item"><div class="usp-number"></div><h3 data-ru="Без очередей" data-kz="Кезексіз">Без очередей</h3><p data-ru="Быстрое обслуживание — уходите с правильным пивом за 5 минут." data-kz="Жылдам қымет — 5 минут ішінде дұрыс сырамен кетіңіз.">Быстрое обслуживание — уходите с правильным пивом за 5 минут.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag" data-ru="Отзывы" data-kz="Пікірлер">Отзывы</span>
+                <h2 class="section-title" data-ru="Что говорят наши клиенты" data-kz="Тұтынушыларымыз не дейді">Что говорят наши клиенты</h2>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card"><div class="testimonial-stars"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><blockquote>«Наконец-то магазин, где можно купить пиво и не бояться, что оно прокисло.»</blockquote><div class="testimonial-author"><div class="author-avatar">АР</div><div><div class="author-name">Алексей Р.</div><div class="author-role">Постоянный клиент</div></div></div></div>
+                <div class="testimonial-card"><div class="testimonial-stars"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><blockquote>«Снеки на развес — гениальная идея. Взял по чуть-чуть всё, что хотел попробовать.»</blockquote><div class="testimonial-author"><div class="author-avatar">МК</div><div><div class="author-name">Марина К.</div><div class="author-role">Покупатель</div></div></div></div>
+                <div class="testimonial-card"><div class="testimonial-stars"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><blockquote>«Зашёл после работы за литр пива — ушёл через 3 минуты. Возвращаюсь каждую пятницу.»</blockquote><div class="testimonial-author"><div class="author-avatar">ДМ</div><div><div class="author-name">Данияр М.</div><div class="author-role">Регулярный клиент</div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contacts" class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <span class="section-tag" data-ru="Контакты" data-kz="Байланыс">Контакты</span>
+                <h2 data-ru="Ждём вас в магазине ПРАГА" data-kz="ПРАГА дүкенінде сізді күтеміз">Ждём вас в магазине ПРАГА</h2>
+                <p data-ru="Приходите за честным пивом и лучшими закусками." data-kz="Адал сыра мен ең жақсы тағамдар үшін келіңіз.">Приходите за честным пивом и лучшими закусками.</p>
+                <a href="tel:+77001234567" class="btn-primary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <span data-ru="Позвонить" data-kz="Қоңырау шалу">Позвонить</span></a>
+                <div class="cta-contact">
+                    <div class="contact-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span data-ru="г. Актау, ул. Примерная, 1" data-kz="Ақтау қ., Мысал к., 1">г. Актау, ул. Примерная, 1</span></div>
+                    <div class="contact-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span data-ru="Ежедневно 10:00 — 23:00" data-kz="Күнделікті 10:00 — 23:00">Ежедневно 10:00 — 23:00</span></div>
+                    <div class="contact-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span><span>+7 (700) 123-45-67</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">ПРАГА</div>
+            <div class="footer-text" data-ru="&copy; 2026 ПРАГА. Все права защищены." data-kz="&copy; 2026 ПРАГА. Барлық құқықтар қорғалған.">&copy; 2026 ПРАГА. Все права защищены.</div>
+            <div class="footer-links"><a href="#">Instagram</a><a href="#">WhatsApp</a><a href="#">Telegram</a></div>
+        </div>
+    </footer>
+
+    <script>
+    // Language switcher
+    function setLang(lang) {
+        document.querySelectorAll('[data-ru]').forEach(function(el) {
+            el.textContent = el.getAttribute('data-' + lang);
+        });
+        document.querySelectorAll('.lang-btn').forEach(function(btn) {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    (function(){
+        var drinks = [
+            {name:'ПРАГА Классическое',type:'Пшеничное',img:'images/praga-classic.png',desc:'Классический рецепт ПРАГИ от пивоварни А.П. Лоренца порадует всех любителей чешского лагера. Его тонкий солодовый вкус и цветочный аромат, погрузит в атмосферу загадочной чешской столицы и позволить совершить маленькое гастрономическое путешествие по уютным улочкам и праздничным площадям старого города.'},
+            {name:'ПРАГА Пшеничное',type:'Нефильтрованное',img:'images/praga-wheat.png',desc:'Классический рецепт ПРАГИ от пивоварни А.П. Лоренца порадует всех любителей чешского лагера. Его тонкий солодовый вкус и цветочный аромат, погрузит в атмосферу загадочной чешской столицы и позволить совершить маленькое гастрономическое путешествие по уютным улочкам и праздничным площадям старого города..'},
+            {name:'Arasan Крепкое',type:'Премиум',img:'images/premium-arasan.png',desc:'Рецептура и технология были разработаны совместно с чешскими пивоварами. В результате такой работы получилось пиво, которое соответствует «чешскому местному пиву». Классическое светлое пиво с золотым оттенком. Обладает насыщенным вкусом с характерной хмелевой горчинкой. Процент алкоголя: 7.3%.'},
+            {name:'Светлое СССР',type:'Классика',img:'images/sssr-service.png',desc:'Традиционное пиво, проверенное временем, с приятным солодовым и хмелевым вкусом. Пиво пьется очень легко. Особо хорошо пьется с вяленой рыбой.'},
+            {name:'ERZMANN Light',type:'Светлое',img:'images/erzmann-light.png',desc:'Пиво "Erzmann Light" пропитано ароматом рыцарского благородства. Классический светлый лагер. Легкое пиво с мягким вкусом и тонким хмельным ароматом. Пиво проходит «мягкую» фильтрацию с минимальным количеством дрожжей, что придаёт напитку прозрачный, золотистый цвет и лёгкий, мягкий вкус.'},
+            {name:'Немецкое',type:'Особое',img:'images/nemetskoe.png',desc:'Пиво сварено по немецкой традиционной технологии с использованием хмеля немецких сортов. Пиво обладает приятным насыщенным ароматом, что позволяет в полной мере оценить его вкусовые качества.'},
+            {name:'РУДНЕНСКОЕ',type:'Классическое',img:'images/rudnenskoe.png',desc:'Визитная карточка завода «АРАСАН», представлена в обновленном дизайне и с улучшенной рецептурой. Светлое нефильтрованное пиво с насыщенным солодовым вкусом и ярким ароматом. «Рудненское» — отличный выбор для ценителей светлого пива без лишней горечи.'},
+            {name:'ЯНТАРНОЕ',type:'Светлое',img:'images/yantarnoe.png',desc:'Пиво с мягким приятным послевкусием. Ценители пенного узнают в нем лучшие советские сорта пива. Производится с соблюдением традиций советского пивоварения.'},
+            {name:'ЖИГУЛЕВСКОЕ',type:'Особое',img:'images/zhigulevskoe.png',desc:'Жигулевское - пиво-история. Традиционное пиво, проверенное временем, с приятным солодовым и хмелевым вкусом, имеет небольшую слабовыраженную горчинку. Пиво пьется очень легко. Особо хорошо пьется с вяленой рыбой.'}
+        ];
+
+        var container = document.getElementById('drinksContainer');
+        var bubbles = [];
+        var rnd = function(a,b){return Math.random()*(b-a)+a};
+
+        // Background bubbles
+        var bg = document.getElementById('beerBubblesBg');
+        for(var i=0;i<20;i++){
+            var b=document.createElement('div');b.className='beer-bubble-bg';
+            var s=10+Math.random()*40;
+            b.style.cssText='width:'+s+'px;height:'+s+'px;left:'+Math.random()*100+'%;bottom:-'+s+'px;animation-duration:'+(15+Math.random()*20)+'s;animation-delay:'+Math.random()*-30+'s';
+            bg.appendChild(b);
+        }
+
+        // Create drink bubbles (3 copies of each)
+        var allDrinks = drinks.concat(drinks).concat(drinks);
+        allDrinks.forEach(function(drink){
+            var el=document.createElement('div');
+            el.className='bubble';
+            var sz=100+Math.random()*80;
+            el.style.width=sz+'px';
+            el.style.height=sz+'px';
+
+            var img=document.createElement('img');
+            img.className='bubble-img';
+            img.src=drink.img;
+            img.alt=drink.name;
+            img.onerror=function(){this.style.background='linear-gradient(135deg,#2A1F0A,#4A380D)';this.style.borderRadius='50%';this.style.display='block'};
+            el.appendChild(img);
+            container.appendChild(el);
+
+            var cw=container.clientWidth||1200;
+            var ch=container.clientHeight||600;
+
+            var bo={el:el,drink:drink,x:rnd(20,cw-sz-20),y:rnd(50,ch-sz-50),sz:sz,vy:-(0.2+Math.random()*0.4),wo:rnd(0,6.28),ws:rnd(0.01,0.025),wa:rnd(0.5,1.5),dx:0,dt:rnd(-0.3,0.3),dc:0,popped:false};
+
+            el.addEventListener('click',function(){
+                if(bo.popped)return;
+                bo.popped=true;
+
+                // Particles
+                var cx=bo.x+sz/2, cy=bo.y+sz/2;
+                for(var j=0;j<8;j++){
+                    var p=document.createElement('div');p.className='particle';
+                    var a=(j/8)*6.28, d=50+Math.random()*30;
+                    p.style.cssText='left:'+cx+'px;top:'+cy+'px;width:'+(4+Math.random()*5)+'px;height:'+(4+Math.random()*5)+'px;background:rgba(255,220,100,0.9);--tx:'+Math.cos(a)*d+'px;--ty:'+Math.sin(a)*d+'px';
+                    container.appendChild(p);
+                    setTimeout(function(el){return function(){el.remove()}}(p),800);
+                }
+
+                // Pop animation
+                el.style.transition='transform 0.3s ease-out, opacity 0.3s ease-out';
+                el.style.transform='translate('+bo.x+'px,'+bo.y+'px) scale(1.2)';
+                setTimeout(function(){
+                    el.style.transform='translate('+bo.x+'px,'+bo.y+'px) scale(0)';
+                    el.style.opacity='0';
+                },150);
+
+                setTimeout(function(){
+                    el.style.display='none';
+                    openCard(drink);
+                },400);
+            });
+
+            bubbles.push(bo);
+        });
+
+        function openCard(drink){
+            document.querySelectorAll('.drink-card-popup').forEach(function(c){c.remove()});
+            var card=document.createElement('div');
+            card.className='drink-card-popup';
+            card.innerHTML='<div class="card-close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><div class="card-img-wrapper"><img class="card-img" src="'+drink.img+'" alt="'+drink.name+'" onerror="this.style.display=\'none\'"></div><h3 class="card-title">'+drink.name+'</h3><p class="card-type">'+drink.type+'</p><p class="card-desc">'+drink.desc+'</p>';
+            document.body.appendChild(card);
+            card.querySelector('.card-close').onclick=function(){card.remove()};
+        }
+
+        // Animation loop
+        var isAnimating=true;
+        function animate(){
+            if(!isAnimating){requestAnimationFrame(animate);return}
+            var cw=container.clientWidth||1200;
+            var ch=container.clientHeight||600;
+            for(var i=0;i<bubbles.length;i++){
+                var b=bubbles[i];
+                if(b.popped)continue;
+                b.wo+=b.ws;
+                var wx=Math.sin(b.wo)*b.wa;
+                b.dc++;if(b.dc>100){b.dt=rnd(-0.3,0.3);b.dc=0}
+                b.dx+=(b.dt-b.dx)*0.01;
+                b.x+=wx+b.dx;
+                b.y+=b.vy;
+                if(b.x<0)b.x=0;
+                if(b.x>cw-b.sz)b.x=cw-b.sz;
+                if(b.y<-b.sz){b.y=ch+20;b.x=rnd(20,cw-b.sz-20)}
+                b.el.style.transform='translate('+b.x+'px,'+b.y+'px)';
+            }
+            requestAnimationFrame(animate);
+        }
+        setTimeout(animate,100);
+
+        // Pause when not visible
+        new IntersectionObserver(function(e){isAnimating=e[0].isIntersecting},{threshold:0.1}).observe(document.getElementById('drinks'));
+
+        // Nav scroll
+        window.addEventListener('scroll',function(){document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>50)});
+    })();
+    </script>
+</body>
+</html>
