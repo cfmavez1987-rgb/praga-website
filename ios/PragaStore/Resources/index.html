@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#0D0B08">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ПРАГА">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>ПРАГА — Каталог</title>
     <link rel="manifest" href="manifest.json">
     <style>
@@ -996,95 +998,6 @@
             cursor: pointer;
         }
 
-        /* Auth Page */
-        .auth-container {
-            min-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .auth-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .auth-logo svg {
-            color: var(--amber);
-            margin-bottom: 12px;
-        }
-
-        .auth-logo h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: var(--amber);
-            margin-bottom: 8px;
-        }
-
-        .auth-logo p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .auth-form {
-            width: 100%;
-            max-width: 360px;
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 24px;
-        }
-
-        .auth-form h2 {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .auth-form .form-group {
-            margin-bottom: 16px;
-        }
-
-        .auth-form label {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .auth-form input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .auth-form input:focus {
-            border-color: var(--amber);
-        }
-
-        .auth-switch {
-            text-align: center;
-            margin-top: 16px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        .auth-switch a {
-            color: var(--amber);
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .auth-switch a:hover {
-            text-decoration: underline;
-        }
-
         /* Admin Dashboard */
         .admin-stats {
             display: grid;
@@ -1262,6 +1175,59 @@
             font-size: 1rem;
             outline: none;
         }
+
+        /* Admin Login */
+        .admin-login-container {
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-login-box {
+            width: 100%;
+            max-width: 360px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center;
+        }
+
+        .admin-login-box h2 {
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+        }
+
+        /* Photo Upload */
+        .photo-upload {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--amber);
+            background: rgba(212, 148, 10, 0.05);
+        }
+
+        .photo-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .photo-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -1296,126 +1262,21 @@
             <div id="cartContent"></div>
         </div>
 
-        <!-- ORDERS PAGE -->
-        <div class="page" id="page-orders">
-            <h2 class="section-title">&#128230; Мои заказы</h2>
-            <div id="ordersContent"></div>
-        </div>
-
-        <!-- PROFILE PAGE -->
-        <div class="page" id="page-profile">
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <h2 class="profile-name" id="profileName">Гость</h2>
-                <p class="profile-email" id="profileEmail">Войдите, чтобы оформлять заказы</p>
-            </div>
-
-            <div class="profile-section">
-                <h3>Личные данные</h3>
-                <div class="profile-form">
+        <!-- ADMIN LOGIN PAGE -->
+        <div class="page" id="page-admin-login">
+            <div class="admin-login-container">
+                <div class="admin-login-box">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--amber); margin-bottom: 16px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <h2>Вход в панель администратора</h2>
                     <div class="form-group">
-                        <label>Имя</label>
-                        <input type="text" id="profileInputName" placeholder="Ваше имя">
+                        <label>Логин</label>
+                        <input type="text" id="adminLogin" placeholder="Введите логин">
                     </div>
                     <div class="form-group">
-                        <label>Телефон</label>
-                        <input type="tel" id="profileInputPhone" placeholder="+7 (___) ___-__-__">
+                        <label>Пароль</label>
+                        <input type="password" id="adminPassword" placeholder="Введите пароль">
                     </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="profileInputEmail" placeholder="email@example.com">
-                    </div>
-                    <button class="btn-primary" onclick="saveProfile()">Сохранить</button>
-                </div>
-            </div>
-
-            <div class="profile-section">
-                <h3>Мои данные</h3>
-                <div class="profile-stats">
-                    <div class="profile-stat">
-                        <span class="profile-stat-num" id="profileOrderCount">0</span>
-                        <span class="profile-stat-label">Заказов</span>
-                    </div>
-                    <div class="profile-stat">
-                        <span class="profile-stat-num" id="profileTotalSpent">0 ₸</span>
-                        <span class="profile-stat-label">Потрачено</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="profile-section">
-                <h3>Настройки</h3>
-                <div class="profile-menu">
-                    <div class="profile-menu-item" onclick="alert('Уведомления включены')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        <span>Уведомления</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
-                    <div class="profile-menu-item" onclick="alert('Язык: Русский')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        <span>Язык</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
-                    <div class="profile-menu-item" onclick="if(confirm('Выйти из аккаунта?')){logout()}">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        <span>Выйти</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AUTH PAGE -->
-        <div class="page" id="page-auth">
-            <div class="auth-container">
-                <div class="auth-logo">
-                    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>
-                    <h1>ПРАГА</h1>
-                    <p>Войдите для оформления заказов</p>
-                </div>
-
-                <!-- Login Form -->
-                <div id="loginForm">
-                    <div class="auth-form">
-                        <h2>Вход</h2>
-                        <div class="form-group">
-                            <label>Телефон или Email</label>
-                            <input type="text" id="loginEmail" placeholder="Введите телефон или email">
-                        </div>
-                        <div class="form-group">
-                            <label>Пароль</label>
-                            <input type="password" id="loginPassword" placeholder="Введите пароль">
-                        </div>
-                        <button class="btn-primary" onclick="login()">Войти</button>
-                        <p class="auth-switch">Нет аккаунта? <a onclick="showRegister()">Зарегистрироваться</a></p>
-                    </div>
-                </div>
-
-                <!-- Register Form -->
-                <div id="registerForm" style="display:none">
-                    <div class="auth-form">
-                        <h2>Регистрация</h2>
-                        <div class="form-group">
-                            <label>Имя</label>
-                            <input type="text" id="regName" placeholder="Ваше имя">
-                        </div>
-                        <div class="form-group">
-                            <label>Телефон</label>
-                            <input type="tel" id="regPhone" placeholder="+7 (___) ___-__-__">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="regEmail" placeholder="email@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Пароль</label>
-                            <input type="password" id="regPassword" placeholder="Минимум 6 символов">
-                        </div>
-                        <button class="btn-primary" onclick="register()">Зарегистрироваться</button>
-                        <p class="auth-switch">Уже есть аккаунт? <a onclick="showLogin()">Войти</a></p>
-                    </div>
+                    <button class="btn-primary" onclick="adminLogin()">Войти</button>
                 </div>
             </div>
         </div>
@@ -1557,8 +1418,15 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Эмодзи (иконка)</label>
-                        <input type="text" id="prodEmoji" placeholder="🍺" maxlength="2">
+                        <label>Фото товара</label>
+                        <div class="photo-upload" id="photoUpload" onclick="document.getElementById('prodPhoto').click()">
+                            <input type="file" id="prodPhoto" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+                            <div id="photoPreview" class="photo-preview">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <span>Нажмите для загрузки</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="prodImage">
                     </div>
                     <div class="form-group">
                         <label>Описание</label>
@@ -1592,15 +1460,7 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             <span>Корзина</span>
         </button>
-        <button class="nav-item" onclick="showPage('orders')">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            <span>Заказы</span>
-        </button>
-        <button class="nav-item" onclick="showPage('profile')">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span>Профиль</span>
-        </button>
-        <button class="nav-item" onclick="showPage('admin')">
+        <button class="nav-item" onclick="showPage('admin-login')">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <span>Админ</span>
         </button>
@@ -1644,150 +1504,31 @@ function saveData() {
 
 // ===== NAVIGATION =====
 function showPage(page) {
-    // Check auth for protected pages
-    if (['cart', 'orders', 'profile', 'admin'].includes(page) && !isLoggedIn()) {
-        showPage('auth');
-        return;
-    }
-
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach((n, i) => {
-        n.classList.remove('active');
-        if (['home', 'cart', 'orders', 'profile', 'admin'][i] === page) n.classList.add('active');
-    });
+
+    var navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(n => n.classList.remove('active'));
+
+    if (page === 'home') navItems[0].classList.add('active');
+    if (page === 'cart') navItems[1].classList.add('active');
+    if (page === 'admin-login' || page === 'admin') navItems[2].classList.add('active');
+
     if (page === 'cart') renderCart();
-    if (page === 'orders') renderOrders();
     if (page === 'admin') renderAdmin();
-    if (page === 'profile') loadProfile();
     window.scrollTo(0, 0);
 }
 
-// ===== PROFILE =====
-function loadProfile() {
-    var user = JSON.parse(localStorage.getItem('praga_user'));
-    var profile = JSON.parse(localStorage.getItem('praga_profile')) || {};
+// ===== ADMIN LOGIN =====
+function adminLogin() {
+    var login = document.getElementById('adminLogin').value.trim();
+    var password = document.getElementById('adminPassword').value;
 
-    if (user) {
-        document.getElementById('profileName').textContent = user.name;
-        document.getElementById('profileEmail').textContent = user.email;
-        document.getElementById('profileInputName').value = user.name || '';
-        document.getElementById('profileInputPhone').value = user.phone || '';
-        document.getElementById('profileInputEmail').value = user.email || '';
+    if (login === 'admin' && password === '12345') {
+        showPage('admin');
     } else {
-        document.getElementById('profileName').textContent = 'Гость';
-        document.getElementById('profileEmail').textContent = 'Войдите для оформления заказов';
+        showToast('Неверный логин или пароль');
     }
-
-    var userOrders = orders.filter(function(o) { return o.phone === (user ? user.phone : ''); });
-    document.getElementById('profileOrderCount').textContent = userOrders.length;
-    var total = userOrders.reduce(function(s, o) { return s + o.total; }, 0);
-    document.getElementById('profileTotalSpent').textContent = total + ' ₸';
-}
-
-function saveProfile() {
-    var profile = {
-        name: document.getElementById('profileInputName').value.trim(),
-        phone: document.getElementById('profileInputPhone').value.trim(),
-        email: document.getElementById('profileInputEmail').value.trim()
-    };
-    localStorage.setItem('praga_profile', JSON.stringify(profile));
-    loadProfile();
-    alert('Профиль сохранён!');
-}
-
-function clearProfile() {
-    localStorage.removeItem('praga_profile');
-    localStorage.removeItem('praga_user');
-    loadProfile();
-}
-
-// ===== AUTH =====
-function isLoggedIn() {
-    return localStorage.getItem('praga_user') !== null;
-}
-
-function checkAuth() {
-    if (!isLoggedIn()) {
-        showPage('auth');
-        return false;
-    }
-    return true;
-}
-
-function showLogin() {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('registerForm').style.display = 'none';
-}
-
-function showRegister() {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-}
-
-function login() {
-    var email = document.getElementById('loginEmail').value.trim();
-    var password = document.getElementById('loginPassword').value;
-
-    if (!email || !password) {
-        alert('Заполните все поля');
-        return;
-    }
-
-    var users = JSON.parse(localStorage.getItem('praga_users')) || [];
-    var user = users.find(function(u) {
-        return (u.email === email || u.phone === email) && u.password === password;
-    });
-
-    if (!user) {
-        alert('Неверный email или пароль');
-        return;
-    }
-
-    localStorage.setItem('praga_user', JSON.stringify(user));
-    localStorage.setItem('praga_profile', JSON.stringify({
-        name: user.name,
-        phone: user.phone,
-        email: user.email
-    }));
-    showPage('home');
-}
-
-function register() {
-    var name = document.getElementById('regName').value.trim();
-    var phone = document.getElementById('regPhone').value.trim();
-    var email = document.getElementById('regEmail').value.trim();
-    var password = document.getElementById('regPassword').value;
-
-    if (!name || !phone || !email || !password) {
-        alert('Заполните все поля');
-        return;
-    }
-
-    if (password.length < 6) {
-        alert('Пароль должен быть минимум 6 символов');
-        return;
-    }
-
-    var users = JSON.parse(localStorage.getItem('praga_users')) || [];
-
-    if (users.find(function(u) { return u.email === email; })) {
-        alert('Пользователь с таким email уже существует');
-        return;
-    }
-
-    var user = { name: name, phone: phone, email: email, password: password };
-    users.push(user);
-    localStorage.setItem('praga_users', JSON.stringify(users));
-    localStorage.setItem('praga_user', JSON.stringify(user));
-    localStorage.setItem('praga_profile', JSON.stringify({ name: name, phone: phone, email: email }));
-    showPage('home');
-}
-
-function logout() {
-    localStorage.removeItem('praga_user');
-    localStorage.removeItem('praga_profile');
-    showPage('auth');
 }
 
 // ===== CATEGORIES =====
@@ -1816,7 +1557,7 @@ function renderProducts() {
     document.getElementById('productGrid').innerHTML = filtered.map(p => `
         <div class="product-card" onclick="showProductDetail(${p.id})">
             <div class="product-thumb">
-                ${p.emoji}
+                ${p.image ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:100%;height:100%;object-fit:cover">' : p.emoji}
                 ${p.tag ? `<span class="tag">${p.tag}</span>` : ''}
                 ${p.stock <= 0 ? '<span class="out-of-stock">Нет в наличии</span>' : ''}
             </div>
@@ -1846,7 +1587,7 @@ function showProductDetail(id) {
 
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-handle"></div>
-        <div class="modal-image">${p.emoji}</div>
+        <div class="modal-image">${p.image ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:100%;height:100%;object-fit:cover">' : p.emoji}</div>
         <div class="modal-body">
             <h2>${p.name}</h2>
             <div class="meta">${p.category} • ${p.stock > 0 ? 'В наличии' : 'Нет в наличии'}</div>
@@ -1994,35 +1735,52 @@ function showCheckout() {
 }
 
 function placeOrder() {
-    const name = document.getElementById('checkoutName').value.trim();
-    const phone = document.getElementById('checkoutPhone').value.trim();
+    var name = document.getElementById('checkoutName').value.trim();
+    var phone = document.getElementById('checkoutPhone').value.trim();
+    var comment = document.getElementById('checkoutComment').value.trim();
 
     if (!name || !phone) {
         showToast('Заполните имя и телефон');
         return;
     }
 
-    let total = 0;
-    const items = cart.map(c => {
-        const p = products.find(x => x.id === c.id);
+    var total = 0;
+    var itemsText = '';
+    cart.forEach(function(c) {
+        var p = products.find(function(x) { return x.id === c.id; });
         total += p.price * c.qty;
-        return { name: p.name, qty: c.qty, price: p.price, unit: p.unit };
+        itemsText += '• ' + p.name + ' × ' + c.qty + ' = ' + (p.price * c.qty) + ' ₸\n';
     });
 
-    const order = {
+    // Формируем сообщение для WhatsApp
+    var whatsappNumber = '77001234567'; // Номер магазина
+    var message = '🍺 *Новый заказ ПРАГА*\n\n';
+    message += '👤 Имя: ' + name + '\n';
+    message += '📞 Телефон: ' + phone + '\n\n';
+    message += '📦 *Заказ:*\n' + itemsText + '\n';
+    message += '💰 *Итого: ' + total + ' ₸*\n';
+    if (comment) {
+        message += '\n💬 Комментарий: ' + comment;
+    }
+
+    // Сохраняем заказ
+    var order = {
         id: Date.now(),
-        name,
-        phone,
-        comment: document.getElementById('checkoutComment').value.trim(),
-        items,
-        total,
+        name: name,
+        phone: phone,
+        comment: comment,
+        items: cart.map(function(c) {
+            var p = products.find(function(x) { return x.id === c.id; });
+            return { name: p.name, qty: c.qty, price: p.price, unit: p.unit };
+        }),
+        total: total,
         status: 'new',
         date: new Date().toLocaleString('ru-RU')
     };
 
     // Decrease stock
-    cart.forEach(c => {
-        const p = products.find(x => x.id === c.id);
+    cart.forEach(function(c) {
+        var p = products.find(function(x) { return x.id === c.id; });
         p.stock -= c.qty;
     });
 
@@ -2031,35 +1789,21 @@ function placeOrder() {
     saveData();
     updateCartBadge();
 
-    document.getElementById('cartContent').innerHTML = `
-        <div class="success-msg">
-            <span>&#9989;</span>
-            <h2>Заказ оформлен!</h2>
-            <p style="color: var(--text-secondary); margin-top: 8px;">Заказ №${order.id} принят. Мы свяжемся с вами для подтверждения.</p>
-            <button class="btn btn-primary" onclick="showPage('home')" style="margin-top: 20px;">На главную</button>
-        </div>
-    `;
-}
+    // Открываем WhatsApp с сообщением
+    var encodedMessage = encodeURIComponent(message);
+    var whatsappUrl = 'https://wa.me/' + whatsappNumber + '?text=' + encodedMessage;
 
-// ===== ORDERS =====
-function renderOrders() {
-    const container = document.getElementById('ordersContent');
-    if (orders.length === 0) {
-        container.innerHTML = `<div class="cart-empty"><span>&#128230;</span><p>Заказов пока нет</p></div>`;
-        return;
-    }
-
-    container.innerHTML = orders.map(o => `
-        <div class="order-card">
-            <div class="order-header">
-                <span class="order-id">Заказ #${o.id}</span>
-                <span class="order-status status-${o.status}">${getStatusText(o.status)}</span>
-            </div>
-            <div class="order-items">${o.items.map(i => `${i.name} × ${i.qty}`).join(', ')}</div>
-            <div class="order-total">${o.total} ₸</div>
-            <div class="order-date">${o.date}</div>
-        </div>
-    `).join('');
+    document.getElementById('cartContent').innerHTML = '<div class="success-msg">' +
+        '<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+        '<h2>Заказ оформлен!</h2>' +
+        '<p style="color: var(--text-secondary); margin-top: 8px;">Заказ №' + order.id + ' принят.</p>' +
+        '<div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">' +
+        '<a href="' + whatsappUrl + '" target="_blank" class="btn btn-primary" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+        'Отправить в WhatsApp</a>' +
+        '<button class="btn btn-outline" onclick="showPage(\'home\')">На главную</button>' +
+        '</div>' +
+    '</div>';
 }
 
 function getStatusText(status) {
@@ -2120,7 +1864,7 @@ function saveSettings() {
 function renderAdminProducts() {
     document.getElementById('adminProductList').innerHTML = products.map(p => `
         <div class="admin-product-item">
-            <div class="thumb">${p.emoji}</div>
+            <div class="thumb">${p.image ? '<img src="' + p.image + '" alt="' + p.name + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px">' : p.emoji}</div>
             <div class="info">
                 <h4>${p.name}</h4>
                 <span class="price">${p.price} ₸/${p.unit} • Остаток: ${p.stock}</span>
@@ -2179,13 +1923,34 @@ function switchAdminTab(tab) {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
 
+    var tabs = ['products', 'orders', 'users', 'settings'];
+    var index = tabs.indexOf(tab);
+    if (index >= 0) {
+        document.querySelectorAll('.admin-tab')[index].classList.add('active');
+    }
+
     if (tab === 'products') {
-        document.querySelectorAll('.admin-tab')[0].classList.add('active');
         document.getElementById('admin-products').classList.add('active');
     } else if (tab === 'orders') {
-        document.querySelectorAll('.admin-tab')[1].classList.add('active');
         document.getElementById('admin-orders').classList.add('active');
+    } else if (tab === 'users') {
+        document.getElementById('admin-users').classList.add('active');
+    } else if (tab === 'settings') {
+        document.getElementById('admin-settings').classList.add('active');
     }
+}
+
+// ===== PHOTO UPLOAD =====
+function handlePhotoUpload(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('prodImage').value = e.target.result;
+        document.getElementById('photoPreview').innerHTML = '<img src="' + e.target.result + '" alt="Фото товара">';
+    };
+    reader.readAsDataURL(file);
 }
 
 // ===== PRODUCT FORM =====
@@ -2200,6 +1965,8 @@ function showAddProduct() {
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodStock').value = '';
     document.getElementById('prodTag').value = '';
+    document.getElementById('prodImage').value = '';
+    document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
 
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
     document.getElementById('admin-product-form').classList.add('active');
@@ -2217,6 +1984,14 @@ function editProduct(id) {
     document.getElementById('prodDesc').value = p.desc;
     document.getElementById('prodStock').value = p.stock;
     document.getElementById('prodTag').value = p.tag;
+    document.getElementById('prodImage').value = p.image || '';
+
+    // Show image preview
+    if (p.image) {
+        document.getElementById('photoPreview').innerHTML = '<img src="' + p.image + '" alt="Фото товара">';
+    } else {
+        document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
+    }
 
     document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
     document.getElementById('admin-product-form').classList.add('active');
@@ -2236,6 +2011,7 @@ function saveProduct() {
     const desc = document.getElementById('prodDesc').value.trim();
     const stock = parseInt(document.getElementById('prodStock').value) || 0;
     const tag = document.getElementById('prodTag').value.trim();
+    const image = document.getElementById('prodImage').value;
 
     if (!name || !price) {
         showToast('Заполните название и цену');
@@ -2244,11 +2020,11 @@ function saveProduct() {
 
     if (editingProductId) {
         const p = products.find(x => x.id === editingProductId);
-        Object.assign(p, { name, price, unit, category, emoji, desc, stock, tag });
+        Object.assign(p, { name, price, unit, category, emoji, desc, stock, tag, image });
     } else {
         products.push({
             id: Date.now(),
-            name, price, unit, category, emoji, desc, stock, tag
+            name, price, unit, category, emoji, desc, stock, tag, image
         });
     }
 
@@ -2303,6 +2079,13 @@ function showToast(msg) {
 renderCategories();
 renderProducts();
 updateCartBadge();
+
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+        .then(function(reg) { console.log('SW registered'); })
+        .catch(function(err) { console.log('SW error:', err); });
+}
 </script>
 
 </body>
