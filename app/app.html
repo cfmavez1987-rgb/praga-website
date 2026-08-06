@@ -209,6 +209,8 @@
                 <h3>Настройки</h3>
                 <div class="settings-form">
                     <div class="form-group"><label>Телефон WhatsApp</label><input type="tel" id="whatsappPhone" placeholder="77001234567"></div>
+                    <div class="form-group"><label>Логин админа</label><input type="text" id="setAdminLogin" placeholder="admin"></div>
+                    <div class="form-group"><label>Пароль админа</label><input type="password" id="setAdminPass" placeholder="Введите новый пароль"></div>
                     <button class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
                 </div>
             </div>
@@ -280,8 +282,16 @@ const db = firebase.firestore();
 var products = [];
 var cart = JSON.parse(localStorage.getItem('praga_cart')) || [];
 var orders = [];
-var settings = {whatsapp:'77001234567'};
+var settings = {whatsapp:'77001234567', adminLogin:'admin', adminPass:'12345'};
 var currentCat = 'Все';
+var editId = null;
+
+function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(String(s)));
+    return d.innerHTML;
+}
 
 // ===== LOAD FROM FIREBASE =====
 function loadData() {
@@ -404,7 +414,7 @@ function showPage(p) {
 function adminLogin() {
     var l = document.getElementById('adminLogin').value.trim();
     var p = document.getElementById('adminPassword').value;
-    if (l === 'admin' && p === '12345') {
+    if (l === (settings.adminLogin || 'admin') && p === (settings.adminPass || '12345')) {
         showPage('admin');
     } else {
         showToast('Неверный логин или пароль');
@@ -425,6 +435,8 @@ function renderAdmin() {
     renderAdminProducts();
     renderAdminOrders();
     document.getElementById('whatsappPhone').value = settings.whatsapp || '';
+    document.getElementById('setAdminLogin').value = settings.adminLogin || '';
+    document.getElementById('setAdminPass').value = '';
 }
 
 // ===== PRODUCTS =====
@@ -436,7 +448,7 @@ function renderProducts() {
         return mc && ms;
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
-        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + p.image + '">' : p.emoji) + (p.tag ? '<span class="tag">' + p.tag + '</span>' : '') + '</div><div class="product-details"><h4>' + p.name + '</h4><div class="product-meta">' + p.category + '</div><div class="product-bottom"><span class="product-price">' + p.price + ' <small>₸/' + p.unit + '</small></span>' + (p.stock > 0 ? '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>' : '') + '</div></div></div>';
+        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span>' + (p.stock > 0 ? '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>' : '') + '</div></div></div>';
     }).join('');
 }
 
@@ -444,7 +456,7 @@ function renderCategories() {
     var cats = ['Все'];
     products.forEach(function(p) { if (cats.indexOf(p.category) < 0) cats.push(p.category); });
     document.getElementById('categories').innerHTML = cats.map(function(c) {
-        return '<button class="cat-btn ' + (c === currentCat ? 'active' : '') + '" onclick="currentCat=\'' + c + '\';renderCategories();renderProducts()">' + c + '</button>';
+        return '<button class="cat-btn ' + (c === currentCat ? 'active' : '') + '" onclick="currentCat=\'' + esc(c) + '\';renderCategories();renderProducts()">' + esc(c) + '</button>';
     }).join('');
 }
 
@@ -454,7 +466,7 @@ function showDetail(id) {
     if (!p) return;
     var inCart = cart.find(function(c) { return c.id === id; });
     var qty = inCart ? inCart.qty : 1;
-    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + p.image + '">' : p.emoji) + '</div><div class="modal-body"><h2>' + p.name + '</h2><div class="meta">' + p.category + (p.stock > 0 ? ' • В наличии' : ' • Нет') + '</div><div class="desc">' + p.desc + '</div><div class="price-row"><span class="price-big">' + p.price + ' <small>₸/' + p.unit + '</small></span>' + (p.stock > 0 ? '<div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">−</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div>' : '') + '</div>' + (p.stock > 0 ? '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В корзину</button>' : '') + '</div>';
+    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + (p.stock > 0 ? ' \u2022 В наличии' : ' \u2022 Нет') + '</div><div class="desc">' + esc(p.desc) + '</div><div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span>' + (p.stock > 0 ? '<div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div>' : '') + '</div>' + (p.stock > 0 ? '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В корзину</button>' : '') + '</div>';
     document.getElementById('modal').classList.add('active');
 }
 
@@ -511,9 +523,9 @@ function renderCart() {
         var qty = parseInt(x.qty) || 0;
         var t = p.price * qty;
         total += t;
-        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + p.image + '">' : p.emoji) + '</div><div class="cart-item-info"><h4>' + p.name + '</h4><span class="price">' + p.price + ' &#8378;/' + p.unit + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-1)">-</button><span>' + qty + '</span><button onclick="changeCartQty(' + p.id + ',1)">+</button></div></div>';
+        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-1)">-</button><span>' + qty + '</span><button onclick="changeCartQty(' + p.id + ',1)">+</button></div></div>';
     }
-    c.innerHTML = items + '<div class="cart-summary"><div class="cart-summary-row"><span>Итого</span><span>' + total + ' &#8378;</span></div></div><button class="btn btn-primary" onclick="showCheckout()" style="margin-top:16px">Оформить заказ</button>';
+    c.innerHTML = items + '<div class="cart-summary"><div class="cart-summary-row"><span>Итого</span><span>' + total + ' \u20B8</span></div></div><button class="btn btn-primary" onclick="showCheckout()" style="margin-top:16px">Оформить заказ</button>';
 }
 
 function showCheckout() {
@@ -570,7 +582,7 @@ function placeOrder() {
     if (comment) msg += '\n💬 Комментарий: ' + comment;
 
     var url = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(msg);
-    document.getElementById('cartContent').innerHTML = '<div class="success-msg"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h2>Заказ оформлен!</h2><p style="color:var(--txt2);margin-top:8px">Заказ #' + order.id + '</p><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px"><a href="' + url + '" target="_blank" class="btn btn-primary" style="text-decoration:none;text-align:center">Отправить в WhatsApp</a><button class="btn btn-outline" onclick="showPage(\'home\')">На главную</button></div></div>';
+    document.getElementById('cartContent').innerHTML = '<div class="success-msg"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h2>Заказ оформлен!</h2><p style="color:var(--txt2);margin-top:8px">Заказ #' + order.id + '</p><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px"><a href="' + esc(url) + '" target="_blank" class="btn btn-primary" style="text-decoration:none;text-align:center">Отправить в WhatsApp</a><button class="btn btn-outline" onclick="showPage(\'home\')">На главную</button></div></div>';
 }
 
 // ===== ORDERS =====
@@ -578,7 +590,7 @@ function renderAdminOrders() {
     var f = document.getElementById('orderFilter') ? document.getElementById('orderFilter').value : 'all';
     var list = f === 'all' ? orders : orders.filter(function(o) { return o.status === f; });
     document.getElementById('orderList').innerHTML = list.length === 0 ? '<p style="color:var(--txt3)">Заказов нет</p>' : list.map(function(o) {
-        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' — ' + o.name + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + o.status + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return i.name + ' × ' + i.qty; }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' &#8378;</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + o.date + ' • ' + o.phone + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
+        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' \u2014 ' + esc(o.name) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return esc(i.name) + ' \u00D7 ' + i.qty; }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' \u20B8</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(o.date) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
     }).join('');
 }
 
@@ -590,7 +602,7 @@ function updateStatus(id, s) {
 // ===== ADMIN PRODUCTS =====
 function renderAdminProducts() {
     document.getElementById('productList').innerHTML = products.map(function(p) {
-        return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + p.image + '">' : p.emoji) + '</div><div class="info"><h4>' + p.name + '</h4><span class="price">' + p.price + ' &#8378;/' + p.unit + ' • Остаток: ' + p.stock + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">&#9998;</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">&#128465;</button></div></div>';
+        return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + ' \u2022 Остаток: ' + p.stock + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">\u270E</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">\uD83D\uDDD1</button></div></div>';
     }).join('');
 }
 
@@ -629,7 +641,7 @@ function handlePhoto(e) {
         // Сжимаем в JPEG с качеством 0.6
         var compressed = canvas.toDataURL('image/jpeg', 0.6);
         document.getElementById('prodImage').value = compressed;
-        document.getElementById('photoPreview').innerHTML = '<img src="' + compressed + '">';
+        document.getElementById('photoPreview').innerHTML = '<img src="' + esc(compressed) + '">';
     };
 
     img.src = URL.createObjectURL(f);
@@ -666,7 +678,7 @@ function editProduct(id) {
     document.getElementById('prodTag').value = p.tag;
     document.getElementById('prodImage').value = p.image || '';
     if (p.image) {
-        document.getElementById('photoPreview').innerHTML = '<img src="' + p.image + '">';
+        document.getElementById('photoPreview').innerHTML = '<img src="' + esc(p.image) + '">';
     } else {
         document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
     }
@@ -724,6 +736,10 @@ function deleteProduct(id) {
 // ===== SETTINGS =====
 function saveSettings() {
     settings.whatsapp = document.getElementById('whatsappPhone').value;
+    var newLogin = document.getElementById('setAdminLogin').value.trim();
+    var newPass = document.getElementById('setAdminPass').value;
+    if (newLogin) settings.adminLogin = newLogin;
+    if (newPass) settings.adminPass = newPass;
     saveSettingsToDb();
     showToast('Настройки сохранены');
 }
