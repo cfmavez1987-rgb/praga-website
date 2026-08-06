@@ -195,12 +195,16 @@
             <div class="admin-section" id="sec-orders">
                 <div class="admin-header">
                     <h3>Заказы</h3>
-                    <select id="orderFilter" onchange="renderOrders()" style="padding:8px;border-radius:8px;background:var(--bg);border:1px solid var(--brd);color:var(--txt)">
-                        <option value="all">Все</option>
-                        <option value="new">Новые</option>
-                        <option value="preparing">Готовятся</option>
-                        <option value="ready">Готовы</option>
-                    </select>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <select id="orderFilter" onchange="renderOrders()" style="padding:8px;border-radius:8px;background:var(--bg);border:1px solid var(--brd);color:var(--txt)">
+                            <option value="all">Все</option>
+                            <option value="new">Новые</option>
+                            <option value="preparing">Готовятся</option>
+                            <option value="ready">Готовы</option>
+                        </select>
+                        <button class="btn btn-outline" style="width:auto;padding:8px 14px;font-size:0.8rem" onclick="exportOrdersExcel()">Excel</button>
+                        <button class="btn btn-danger" style="width:auto;padding:8px 14px;font-size:0.8rem" onclick="clearOrders()">Очистить</button>
+                    </div>
                 </div>
                 <div id="orderList"></div>
             </div>
@@ -597,6 +601,32 @@ function renderAdminOrders() {
 function updateStatus(id, s) {
     var o = orders.find(function(x) { return x.id === id; });
     if (o) { o.status = s; saveOrders(); renderAdminOrders(); }
+}
+
+function exportOrdersExcel() {
+    if (orders.length === 0) { showToast('Нет заказов для экспорта'); return; }
+    var csv = '\uFEFFНомер;Имя;Телефон;Комментарий;Товары;Сумма;Статус;Дата\n';
+    orders.forEach(function(o) {
+        var items = o.items.map(function(i) { return i.name + ' x' + i.qty; }).join(', ');
+        csv += o.id + ';' + esc(o.name) + ';' + esc(o.phone) + ';' + esc(o.comment || '') + ';' + esc(items) + ';' + o.total + ';' + esc(o.status) + ';' + esc(o.date) + '\n';
+    });
+    var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'orders_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Файл скачан');
+}
+
+function clearOrders() {
+    if (orders.length === 0) { showToast('Заказов нет'); return; }
+    if (!confirm('Удалить ВСЕ заказы? (' + orders.length + ' шт.)')) return;
+    orders = [];
+    saveOrders();
+    renderAdminOrders();
+    showToast('Заказы очищены');
 }
 
 // ===== ADMIN PRODUCTS =====
