@@ -1,0 +1,10 @@
+Способ 1 — Python (рекомендую):
+cd ~/Desktop/2
+python3 -m http.server 8888
+Затем откройте в браузере: http://localhost:8888
+Способ 2 — One-liner (открыть браузер сразу):
+cd ~/Desktop/2 && python3 -m http.server 8888 & xdg-open http://localhost:8888
+Способ 3 — Node.js (если установлен):
+cd ~/Desktop/2
+npx serve -p 8888
+Для остановки сервера: нажмите Ctrl+C в консоли.
