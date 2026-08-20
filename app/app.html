@@ -48,6 +48,9 @@
         .product-price{font-weight:700;color:var(--amber)}
         .product-price small{font-size:0.7rem;color:var(--txt3);font-weight:400}
         .cart-add-btn{width:32px;height:32px;border-radius:8px;background:rgba(212,148,10,0.15);border:none;color:var(--amber);font-size:1.2rem;cursor:pointer}
+        .size-popup{position:absolute;bottom:100%;right:0;background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:4px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:flex;gap:2px}
+        .size-popup-btn{padding:6px 10px;border-radius:8px;background:transparent;border:none;color:var(--txt);font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap}
+        .size-popup-btn:hover{background:var(--amber);color:var(--bg)}
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:flex-end;justify-content:center}
         .modal.active{display:flex}
         .modal-content{background:var(--card);width:100%;max-width:500px;max-height:90vh;border-radius:20px 20px 0 0;overflow-y:auto;animation:slideUp .3s}
@@ -464,7 +467,10 @@ function renderProducts() {
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
         var priceDisplay = p.category === '\u041F\u0438\u0432\u043E' ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
-        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span><button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button></div></div></div>';
+        var addBtn = p.category === '\u041F\u0438\u0432\u043E'
+            ? '<div style="position:relative"><button class="cart-add-btn" onclick="event.stopPropagation();showSizePopup(' + p.id + ',this)">+</button></div>'
+            : '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>';
+        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span>' + addBtn + '</div></div></div>';
     }).join('');
 }
 
@@ -525,6 +531,42 @@ function addCartFromModal(id) {
     updateBadge();
     closeModal();
     showToast('Добавлено в корзину');
+}
+
+// ===== SIZE POPUP =====
+function showSizePopup(id, btn) {
+    closeSizePopup();
+    var p = products.find(function(x) { return x.id === id; });
+    if (!p) return;
+    var popup = document.createElement('div');
+    popup.className = 'size-popup';
+    popup.id = 'sizePopup';
+    var sizes = [{v:1,l:'1 \u043B',pr:p.price},{v:1.5,l:'1.5 \u043B',pr:p.price15||0},{v:2,l:'2 \u043B',pr:p.price2||0}];
+    sizes.forEach(function(s) {
+        var b = document.createElement('button');
+        b.className = 'size-popup-btn';
+        b.textContent = s.l + ' \u2022 ' + s.pr + '\u20B8';
+        b.onclick = function(e) { e.stopPropagation(); addBeerCart(id, s.v); closeSizePopup(); };
+        popup.appendChild(b);
+    });
+    btn.parentNode.style.position = 'relative';
+    btn.parentNode.appendChild(popup);
+    setTimeout(function() {
+        document.addEventListener('click', closeSizePopup, {once: true});
+    }, 0);
+}
+
+function closeSizePopup() {
+    var el = document.getElementById('sizePopup');
+    if (el) el.remove();
+}
+
+function addBeerCart(id, size) {
+    var ex = cart.find(function(c) { return c.id === id; });
+    if (ex) ex.qty = size; else cart.push({id: id, qty: size});
+    saveCart();
+    updateBadge();
+    showToast('\u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E: ' + size + ' \u043B');
 }
 
 // ===== CART =====
