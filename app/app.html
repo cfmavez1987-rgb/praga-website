@@ -64,6 +64,9 @@
         .qty-control{display:flex;align-items:center;gap:12px}
         .qty-btn{width:40px;height:40px;border-radius:10px;background:var(--bg);border:1px solid var(--brd);color:var(--txt);font-size:1.2rem;cursor:pointer}
         .qty-value{font-size:1.1rem;font-weight:600;min-width:30px;text-align:center}
+        .size-selector{display:flex;gap:8px;margin-bottom:16px}
+        .size-btn{flex:1;padding:12px;border-radius:10px;background:var(--bg);border:1px solid var(--brd);color:var(--txt);font-size:1rem;font-weight:600;cursor:pointer;text-align:center}
+        .size-btn.active{background:var(--amber);border-color:var(--amber);color:var(--bg)}
         .btn{width:100%;padding:14px;border-radius:var(--radius);border:none;font-size:1rem;font-weight:600;cursor:pointer}
         .btn-primary{background:var(--amber);color:var(--bg)}
         .btn-outline{background:transparent;border:1px solid var(--brd);color:var(--txt)}
@@ -289,6 +292,7 @@ var orders = [];
 var settings = {whatsapp:'77001234567', adminLogin:'admin', adminPass:'12345'};
 var currentCat = 'Все';
 var editId = null;
+var selectedSize = 1;
 
 function esc(s) {
     if (!s) return '';
@@ -469,7 +473,14 @@ function showDetail(id) {
     if (!p) return;
     var inCart = cart.find(function(c) { return c.id === id; });
     var qty = inCart ? inCart.qty : 1;
-    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + '</div><div class="desc">' + esc(p.desc) + '</div><div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div><button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В корзину</button></div>';
+    var controls = '';
+    if (p.category === '\u041F\u0438\u0432\u043E') {
+        selectedSize = (qty === 1 || qty === 1.5 || qty === 2) ? qty : 1;
+        controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span></div><div class="size-selector"><button class="size-btn' + (selectedSize === 1 ? ' active' : '') + '" onclick="selectSize(1,this)">1 \u043B</button><button class="size-btn' + (selectedSize === 1.5 ? ' active' : '') + '" onclick="selectSize(1.5,this)">1.5 \u043B</button><button class="size-btn' + (selectedSize === 2 ? ' active' : '') + '" onclick="selectSize(2,this)">2 \u043B</button></div>';
+    } else {
+        controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div>';
+    }
+    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + '</div><div class="desc">' + esc(p.desc) + '</div>' + controls + '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В \u043A\u043E\u0440\u0437\u0438\u043D\u0443</button></div>';
     document.getElementById('modal').classList.add('active');
 }
 
@@ -483,8 +494,16 @@ function changeQty(d, id) {
     el.textContent = q;
 }
 
+function selectSize(size, el) {
+    selectedSize = size;
+    var btns = el.parentNode.querySelectorAll('.size-btn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    el.classList.add('active');
+}
+
 function addCartFromModal(id) {
-    var q = parseInt(document.getElementById('mQty').textContent);
+    var p = products.find(function(x) { return x.id === id; });
+    var q = (p && p.category === '\u041F\u0438\u0432\u043E') ? selectedSize : parseInt(document.getElementById('mQty').textContent);
     var ex = cart.find(function(c) { return c.id === id; });
     if (ex) ex.qty = q; else cart.push({id: id, qty: q});
     saveCart();
@@ -505,7 +524,7 @@ function addCart(id, q) {
 function changeCartQty(id, d) {
     var item = cart.find(function(c) { return c.id === id; });
     if (!item) return;
-    item.qty += d;
+    item.qty = Math.round((item.qty + d) * 10) / 10;
     if (item.qty <= 0) { cart = cart.filter(function(c) { return c.id !== id; }); }
     saveCart();
     renderCart();
@@ -521,10 +540,13 @@ function renderCart() {
         var x = cart[i];
         var p = products.find(function(y) { return y.id === x.id; });
         if (!p) continue;
-        var qty = parseInt(x.qty) || 0;
+        var qty = parseFloat(x.qty) || 0;
         var t = p.price * qty;
         total += t;
-        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-1)">-</button><span>' + qty + '</span><button onclick="changeCartQty(' + p.id + ',1)">+</button></div></div>';
+        var isBeer = p.category === '\u041F\u0438\u0432\u043E';
+        var qtyDisplay = isBeer ? (qty % 1 === 0 ? qty + ' \u043B' : qty + ' \u043B') : qty;
+        var step = isBeer ? 0.5 : 1;
+        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-' + step + ')">-</button><span>' + qtyDisplay + '</span><button onclick="changeCartQty(' + p.id + ',' + step + ')">+</button></div></div>';
     }
     c.innerHTML = items + '<div class="cart-summary"><div class="cart-summary-row"><span>Итого</span><span>' + total + ' \u20B8</span></div></div><button class="btn btn-primary" onclick="showCheckout()" style="margin-top:16px">Оформить заказ</button>';
 }
@@ -544,7 +566,8 @@ function placeOrder() {
     cart.forEach(function(c) {
         var p = products.find(function(x) { return x.id === c.id; });
         total += p.price * c.qty;
-        itemsText += '• ' + p.name + ' × ' + c.qty + ' = ' + (p.price * c.qty) + ' &#8378;\n';
+        var qtyLabel = p.category === '\u041F\u0438\u0432\u043E' ? c.qty + '\u043B' : ' × ' + c.qty;
+        itemsText += '• ' + p.name + ' ' + qtyLabel + ' = ' + (p.price * c.qty) + ' \u20B8\n';
     });
 
     var order = {
@@ -554,7 +577,7 @@ function placeOrder() {
         comment: comment,
         items: cart.map(function(c) {
             var p = products.find(function(x) { return x.id === c.id; });
-            return {name: p.name, qty: c.qty, price: p.price};
+            return {name: p.name, qty: c.qty, price: p.price, unit: p.unit};
         }),
         total: total,
         status: 'new',
@@ -586,7 +609,7 @@ function renderAdminOrders() {
     var f = document.getElementById('orderFilter') ? document.getElementById('orderFilter').value : 'all';
     var list = f === 'all' ? orders : orders.filter(function(o) { return o.status === f; });
     document.getElementById('orderList').innerHTML = list.length === 0 ? '<p style="color:var(--txt3)">Заказов нет</p>' : list.map(function(o) {
-        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' \u2014 ' + esc(o.name) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return esc(i.name) + ' \u00D7 ' + i.qty; }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' \u20B8</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(o.date) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
+        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' \u2014 ' + esc(o.name) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return esc(i.name) + ' \u00D7 ' + i.qty + (i.unit ? esc(i.unit) : ''); }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' \u20B8</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(o.date) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
     }).join('');
 }
 
@@ -599,7 +622,7 @@ function exportOrdersExcel() {
     if (orders.length === 0) { showToast('Нет заказов для экспорта'); return; }
     var csv = '\uFEFFНомер;Имя;Телефон;Комментарий;Товары;Сумма;Статус;Дата\n';
     orders.forEach(function(o) {
-        var items = o.items.map(function(i) { return i.name + ' x' + i.qty; }).join(', ');
+        var items = o.items.map(function(i) { return i.name + ' x' + i.qty + (i.unit || ''); }).join(', ');
         csv += o.id + ';' + esc(o.name) + ';' + esc(o.phone) + ';' + esc(o.comment || '') + ';' + esc(items) + ';' + o.total + ';' + esc(o.status) + ';' + esc(o.date) + '\n';
     });
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
