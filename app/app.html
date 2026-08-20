@@ -229,11 +229,16 @@
                 <h3 id="formTitle">Добавить товар</h3>
                 <div class="checkout-form" style="margin-top:16px">
                     <div class="form-group"><label>Название</label><input type="text" id="prodName"></div>
-                    <div class="form-row">
+                    <div class="form-group"><label>Категория</label><select id="prodCategory" onchange="togglePriceFields()"><option>Пиво</option><option>Снеки</option><option>Закуски</option><option>Напитки</option></select></div>
+                    <div id="priceSingle" class="form-row" style="display:none">
                         <div class="form-group"><label>Цена (₸)</label><input type="number" id="prodPrice"></div>
-                        <div class="form-group"><label>Единица</label><select id="prodUnit"><option value="л">за литр</option><option value="1.5л">за 1.5 литра</option><option value="кг">за кг</option><option value="шт">за штуку</option></select></div>
+                        <div class="form-group"><label>Единица</label><select id="prodUnit"><option value="кг">за кг</option><option value="шт">за штуку</option></select></div>
                     </div>
-                    <div class="form-group"><label>Категория</label><select id="prodCategory"><option>Пиво</option><option>Снеки</option><option>Закуски</option><option>Напитки</option></select></div>
+                    <div id="priceBeer">
+                        <div class="form-group"><label>Цена за 1л (₸)</label><input type="number" id="prodPrice1"></div>
+                        <div class="form-group"><label>Цена за 1.5л (₸)</label><input type="number" id="prodPrice15"></div>
+                        <div class="form-group"><label>Цена за 2л (₸)</label><input type="number" id="prodPrice2"></div>
+                    </div>
                     <div class="form-group">
                         <label>Фото</label>
                         <div class="photo-upload" onclick="document.getElementById('prodPhoto').click()">
@@ -356,11 +361,11 @@ function loadData() {
 
 function getDefaultProducts() {
     return [
-        {id:1,name:'Pilsner Urquell',price:850,unit:'л',category:'Пиво',emoji:'🍺',desc:'Классический чешский пильзнер.',tag:'Хит',image:''},
-        {id:2,name:'Guinness Draught',price:950,unit:'л',category:'Пиво',emoji:'🍺',desc:'Насыщенный стаут с кремовой пенкой.',tag:'',image:''},
-        {id:3,name:'Craft IPA',price:1100,unit:'л',category:'Пиво',emoji:'🍺',desc:'Местный крафт с тропическими нотами.',tag:'Новинка',image:''},
-        {id:4,name:'Corona Extra',price:750,unit:'л',category:'Пиво',emoji:'🍺',desc:'Мексиканское пиво с лаймом.',tag:'',image:''},
-        {id:5,name:'Heineken',price:700,unit:'л',category:'Пиво',emoji:'🍺',desc:'Нидерландский лагер.',tag:'',image:''},
+        {id:1,name:'Pilsner Urquell',price:850,price15:1200,price2:1500,unit:'л',category:'Пиво',emoji:'🍺',desc:'Классический чешский пильзнер.',tag:'Хит',image:''},
+        {id:2,name:'Guinness Draught',price:950,price15:1350,price2:1700,unit:'л',category:'Пиво',emoji:'🍺',desc:'Насыщенный стаут с кремовой пенкой.',tag:'',image:''},
+        {id:3,name:'Craft IPA',price:1100,price15:1550,price2:2000,unit:'л',category:'Пиво',emoji:'🍺',desc:'Местный крафт с тропическими нотами.',tag:'Новинка',image:''},
+        {id:4,name:'Corona Extra',price:750,price15:1050,price2:1350,unit:'л',category:'Пиво',emoji:'🍺',desc:'Мексиканское пиво с лаймом.',tag:'',image:''},
+        {id:5,name:'Heineken',price:700,price15:1000,price2:1300,unit:'л',category:'Пиво',emoji:'🍺',desc:'Нидерландский лагер.',tag:'',image:''},
         {id:6,name:'Микс орехов',price:1200,unit:'кг',category:'Снеки',emoji:'🥜',desc:'Арахис, кешью, миндаль, фисташки.',tag:'Хит',image:''},
         {id:7,name:'Чипсы с трюфелем',price:800,unit:'кг',category:'Снеки',emoji:'🍟',desc:'Тонкие чипсы с трюфельным маслом.',tag:'',image:''},
         {id:8,name:'Сухарики',price:600,unit:'кг',category:'Снеки',emoji:'🥖',desc:'Хрустящие сухарики с чесноком.',tag:'',image:''},
@@ -377,7 +382,7 @@ function saveProducts() {
     var batch = db.batch();
     products.forEach(function(p) {
         var ref = db.collection('shop').doc('product_' + p.id);
-        batch.set(ref, {
+        var doc = {
             id: p.id,
             name: p.name,
             price: p.price,
@@ -385,9 +390,12 @@ function saveProducts() {
             category: p.category,
             desc: p.desc,
             tag: p.tag || '',
-            emoji: p.emoji || '🍺',
+            emoji: p.emoji || '\uD83C\uDF7A',
             image: p.image || ''
-        });
+        };
+        if (p.price15) doc.price15 = p.price15;
+        if (p.price2) doc.price2 = p.price2;
+        batch.set(ref, doc);
     });
     batch.commit().catch(function(e) { console.log('Save error:', e); });
 }
@@ -455,7 +463,8 @@ function renderProducts() {
         return mc && ms;
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
-        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button></div></div></div>';
+        var priceDisplay = p.category === '\u041F\u0438\u0432\u043E' ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
+        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span><button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button></div></div></div>';
     }).join('');
 }
 
@@ -476,7 +485,8 @@ function showDetail(id) {
     var controls = '';
     if (p.category === '\u041F\u0438\u0432\u043E') {
         selectedSize = (qty === 1 || qty === 1.5 || qty === 2) ? qty : 1;
-        controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span></div><div class="size-selector"><button class="size-btn' + (selectedSize === 1 ? ' active' : '') + '" onclick="selectSize(1,this)">1 \u043B</button><button class="size-btn' + (selectedSize === 1.5 ? ' active' : '') + '" onclick="selectSize(1.5,this)">1.5 \u043B</button><button class="size-btn' + (selectedSize === 2 ? ' active' : '') + '" onclick="selectSize(2,this)">2 \u043B</button></div>';
+        var szPrice = getPrice(p, selectedSize);
+        controls = '<div class="price-row"><span class="price-big" id="modalPrice">' + szPrice + ' <small>\u20B8</small></span></div><div class="size-selector"><button class="size-btn' + (selectedSize === 1 ? ' active' : '') + '" onclick="selectSize(1,this,' + id + ')">1 \u043B</button><button class="size-btn' + (selectedSize === 1.5 ? ' active' : '') + '" onclick="selectSize(1.5,this,' + id + ')">1.5 \u043B</button><button class="size-btn' + (selectedSize === 2 ? ' active' : '') + '" onclick="selectSize(2,this,' + id + ')">2 \u043B</button></div>';
     } else {
         controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div>';
     }
@@ -494,11 +504,16 @@ function changeQty(d, id) {
     el.textContent = q;
 }
 
-function selectSize(size, el) {
+function selectSize(size, el, id) {
     selectedSize = size;
     var btns = el.parentNode.querySelectorAll('.size-btn');
     for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
     el.classList.add('active');
+    var p = products.find(function(x) { return x.id === id; });
+    if (p) {
+        var price = getPrice(p, size);
+        document.getElementById('modalPrice').innerHTML = price + ' <small>\u20B8</small>';
+    }
 }
 
 function addCartFromModal(id) {
@@ -524,8 +539,21 @@ function addCart(id, q) {
 function changeCartQty(id, d) {
     var item = cart.find(function(c) { return c.id === id; });
     if (!item) return;
-    item.qty = Math.round((item.qty + d) * 10) / 10;
-    if (item.qty <= 0) { cart = cart.filter(function(c) { return c.id !== id; }); }
+    var p = products.find(function(x) { return x.id === id; });
+    var isBeer = p && p.category === '\u041F\u0438\u0432\u043E';
+    if (isBeer) {
+        if (d > 0) {
+            if (item.qty < 1.5) item.qty = 1.5;
+            else if (item.qty < 2) item.qty = 2;
+        } else {
+            if (item.qty > 1.5) item.qty = 1.5;
+            else if (item.qty > 1) item.qty = 1;
+            else { cart = cart.filter(function(c) { return c.id !== id; }); }
+        }
+    } else {
+        item.qty += d;
+        if (item.qty <= 0) { cart = cart.filter(function(c) { return c.id !== id; }); }
+    }
     saveCart();
     renderCart();
     updateBadge();
@@ -541,12 +569,12 @@ function renderCart() {
         var p = products.find(function(y) { return y.id === x.id; });
         if (!p) continue;
         var qty = parseFloat(x.qty) || 0;
-        var t = p.price * qty;
-        total += t;
         var isBeer = p.category === '\u041F\u0438\u0432\u043E';
-        var qtyDisplay = isBeer ? (qty % 1 === 0 ? qty + ' \u043B' : qty + ' \u043B') : qty;
-        var step = isBeer ? 0.5 : 1;
-        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-' + step + ')">-</button><span>' + qtyDisplay + '</span><button onclick="changeCartQty(' + p.id + ',' + step + ')">+</button></div></div>';
+        var t = getPrice(p, qty);
+        total += t;
+        var qtyDisplay = isBeer ? qty + ' \u043B' : qty;
+        var priceLabel = isBeer ? t + ' \u20B8' : p.price + ' \u20B8/' + esc(p.unit);
+        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + esc(p.name) + '</h4><span class="price">' + priceLabel + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-1)">-</button><span>' + qtyDisplay + '</span><button onclick="changeCartQty(' + p.id + ',1)">+</button></div></div>';
     }
     c.innerHTML = items + '<div class="cart-summary"><div class="cart-summary-row"><span>Итого</span><span>' + total + ' \u20B8</span></div></div><button class="btn btn-primary" onclick="showCheckout()" style="margin-top:16px">Оформить заказ</button>';
 }
@@ -565,9 +593,10 @@ function placeOrder() {
     var itemsText = '';
     cart.forEach(function(c) {
         var p = products.find(function(x) { return x.id === c.id; });
-        total += p.price * c.qty;
+        var itemTotal = getPrice(p, c.qty);
+        total += itemTotal;
         var qtyLabel = p.category === '\u041F\u0438\u0432\u043E' ? c.qty + '\u043B' : ' × ' + c.qty;
-        itemsText += '• ' + p.name + ' ' + qtyLabel + ' = ' + (p.price * c.qty) + ' \u20B8\n';
+        itemsText += '• ' + p.name + ' ' + qtyLabel + ' = ' + itemTotal + ' \u20B8\n';
     });
 
     var order = {
@@ -577,7 +606,7 @@ function placeOrder() {
         comment: comment,
         items: cart.map(function(c) {
             var p = products.find(function(x) { return x.id === c.id; });
-            return {name: p.name, qty: c.qty, price: p.price, unit: p.unit};
+            return {name: p.name, qty: c.qty, price: getPrice(p, c.qty), unit: p.unit};
         }),
         total: total,
         status: 'new',
@@ -692,18 +721,39 @@ function handlePhoto(e) {
     img.src = URL.createObjectURL(f);
 }
 
+// ===== PRICE HELPERS =====
+function togglePriceFields() {
+    var cat = document.getElementById('prodCategory').value;
+    var isBeer = cat === '\u041F\u0438\u0432\u043E';
+    document.getElementById('priceSingle').style.display = isBeer ? 'none' : '';
+    document.getElementById('priceBeer').style.display = isBeer ? '' : 'none';
+}
+
+function getPrice(p, qty) {
+    if (p.category === '\u041F\u0438\u0432\u043E') {
+        if (qty === 1.5 && p.price15) return p.price15;
+        if (qty === 2 && p.price2) return p.price2;
+        return p.price;
+    }
+    return p.price * qty;
+}
+
 // ===== PRODUCT FORM =====
 function showAddProduct() {
     editId = null;
     document.getElementById('formTitle').textContent = 'Добавить товар';
     document.getElementById('prodName').value = '';
     document.getElementById('prodPrice').value = '';
-    document.getElementById('prodUnit').value = 'л';
+    document.getElementById('prodPrice1').value = '';
+    document.getElementById('prodPrice15').value = '';
+    document.getElementById('prodPrice2').value = '';
+    document.getElementById('prodUnit').value = 'кг';
     document.getElementById('prodCategory').value = 'Пиво';
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodTag').value = '';
     document.getElementById('prodImage').value = '';
     document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
+    togglePriceFields();
     document.querySelectorAll('.admin-section').forEach(function(s) { s.classList.remove('active'); });
     document.getElementById('sec-product-form').classList.add('active');
 }
@@ -715,6 +765,9 @@ function editProduct(id) {
     document.getElementById('formTitle').textContent = 'Редактировать товар';
     document.getElementById('prodName').value = p.name;
     document.getElementById('prodPrice').value = p.price;
+    document.getElementById('prodPrice1').value = p.price || '';
+    document.getElementById('prodPrice15').value = p.price15 || '';
+    document.getElementById('prodPrice2').value = p.price2 || '';
     document.getElementById('prodUnit').value = p.unit;
     document.getElementById('prodCategory').value = p.category;
     document.getElementById('prodDesc').value = p.desc;
@@ -725,6 +778,7 @@ function editProduct(id) {
     } else {
         document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
     }
+    togglePriceFields();
     document.querySelectorAll('.admin-section').forEach(function(s) { s.classList.remove('active'); });
     document.getElementById('sec-product-form').classList.add('active');
 }
@@ -736,18 +790,24 @@ function hideProductForm() {
 
 function saveProduct() {
     var name = document.getElementById('prodName').value.trim();
-    var price = parseInt(document.getElementById('prodPrice').value);
+    var cat = document.getElementById('prodCategory').value;
+    var isBeer = cat === '\u041F\u0438\u0432\u043E';
+    var price = isBeer ? parseInt(document.getElementById('prodPrice1').value) : parseInt(document.getElementById('prodPrice').value);
     if (!name || !price) { showToast('Заполните название и цену'); return; }
     var data = {
         name: name,
         price: price,
-        unit: document.getElementById('prodUnit').value,
-        category: document.getElementById('prodCategory').value,
+        unit: isBeer ? '\u043B' : document.getElementById('prodUnit').value,
+        category: cat,
         desc: document.getElementById('prodDesc').value.trim(),
         tag: document.getElementById('prodTag').value.trim(),
         image: document.getElementById('prodImage').value,
-        emoji: '🍺'
+        emoji: '\uD83C\uDF7A'
     };
+    if (isBeer) {
+        data.price15 = parseInt(document.getElementById('prodPrice15').value) || 0;
+        data.price2 = parseInt(document.getElementById('prodPrice2').value) || 0;
+    }
     if (editId) {
         var idx = products.findIndex(function(x) { return x.id === editId; });
         if (idx >= 0) Object.assign(products[idx], data);
