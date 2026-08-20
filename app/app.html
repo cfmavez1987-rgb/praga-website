@@ -486,15 +486,13 @@ function renderCategories() {
 function showDetail(id) {
     var p = products.find(function(x) { return x.id === id; });
     if (!p) return;
-    var inCart = cart.find(function(c) { return c.id === id; });
-    var qty = inCart ? inCart.qty : 1;
     var controls = '';
     if (p.category === '\u041F\u0438\u0432\u043E') {
-        selectedSize = (qty === 1 || qty === 1.5 || qty === 2) ? qty : 1;
-        var szPrice = getPrice(p, selectedSize);
-        controls = '<div class="price-row"><span class="price-big" id="modalPrice">' + szPrice + ' <small>\u20B8</small></span></div><div class="size-selector"><button class="size-btn' + (selectedSize === 1 ? ' active' : '') + '" onclick="selectSize(1,this,' + id + ')">1 \u043B</button><button class="size-btn' + (selectedSize === 1.5 ? ' active' : '') + '" onclick="selectSize(1.5,this,' + id + ')">1.5 \u043B</button><button class="size-btn' + (selectedSize === 2 ? ' active' : '') + '" onclick="selectSize(2,this,' + id + ')">2 \u043B</button></div>';
+        selectedSize = 1;
+        var szPrice = getUnitPrice(p, selectedSize);
+        controls = '<div class="price-row"><span class="price-big" id="modalPrice">' + szPrice + ' <small>\u20B8</small></span></div><div class="size-selector"><button class="size-btn active" onclick="selectSize(1,this,' + id + ')">1 \u043B</button><button class="size-btn" onclick="selectSize(1.5,this,' + id + ')">1.5 \u043B</button><button class="size-btn" onclick="selectSize(2,this,' + id + ')">2 \u043B</button></div>';
     } else {
-        controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div>';
+        controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">1</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div>';
     }
     document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + '</div><div class="desc">' + esc(p.desc) + '</div>' + controls + '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В \u043A\u043E\u0440\u0437\u0438\u043D\u0443</button></div>';
     document.getElementById('modal').classList.add('active');
@@ -517,20 +515,24 @@ function selectSize(size, el, id) {
     el.classList.add('active');
     var p = products.find(function(x) { return x.id === id; });
     if (p) {
-        var price = getPrice(p, size);
+        var price = getUnitPrice(p, size);
         document.getElementById('modalPrice').innerHTML = price + ' <small>\u20B8</small>';
     }
 }
 
 function addCartFromModal(id) {
     var p = products.find(function(x) { return x.id === id; });
-    var q = (p && p.category === '\u041F\u0438\u0432\u043E') ? selectedSize : parseInt(document.getElementById('mQty').textContent);
-    var ex = cart.find(function(c) { return c.id === id; });
-    if (ex) ex.qty = q; else cart.push({id: id, qty: q});
-    saveCart();
-    updateBadge();
+    if (p && p.category === '\u041F\u0438\u0432\u043E') {
+        addBeerCart(id, selectedSize);
+    } else {
+        var q = parseInt(document.getElementById('mQty').textContent);
+        var ex = cart.find(function(c) { return c.id === id && !c.size; });
+        if (ex) ex.qty += q; else cart.push({id: id, qty: q});
+        saveCart();
+        updateBadge();
+        showToast('\u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E \u0432 \u043A\u043E\u0440\u0437\u0438\u043D\u0443');
+    }
     closeModal();
-    showToast('Добавлено в корзину');
 }
 
 // ===== SIZE POPUP =====
@@ -562,8 +564,9 @@ function closeSizePopup() {
 }
 
 function addBeerCart(id, size) {
-    var ex = cart.find(function(c) { return c.id === id; });
-    if (ex) ex.qty = size; else cart.push({id: id, qty: size});
+    var key = id + '_' + size;
+    var ex = cart.find(function(c) { return (c.id + '_' + c.size) === key; });
+    if (ex) { ex.qty += 1; } else { cart.push({id: id, size: size, qty: 1}); }
     saveCart();
     updateBadge();
     showToast('\u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E: ' + size + ' \u043B');
@@ -571,30 +574,29 @@ function addBeerCart(id, size) {
 
 // ===== CART =====
 function addCart(id, q) {
-    var ex = cart.find(function(c) { return c.id === id; });
+    var ex = cart.find(function(c) { return c.id === id && !c.size; });
     if (ex) ex.qty += (q || 1); else cart.push({id: id, qty: q || 1});
     saveCart();
     updateBadge();
-    showToast('Добавлено в корзину');
+    showToast('\u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E \u0432 \u043A\u043E\u0440\u0437\u0438\u043D\u0443');
 }
 
-function changeCartQty(id, d) {
-    var item = cart.find(function(c) { return c.id === id; });
-    if (!item) return;
-    var p = products.find(function(x) { return x.id === id; });
-    var isBeer = p && p.category === '\u041F\u0438\u0432\u043E';
-    if (isBeer) {
-        if (d > 0) {
-            if (item.qty < 1.5) item.qty = 1.5;
-            else if (item.qty < 2) item.qty = 2;
-        } else {
-            if (item.qty > 1.5) item.qty = 1.5;
-            else if (item.qty > 1) item.qty = 1;
-            else { cart = cart.filter(function(c) { return c.id !== id; }); }
-        }
+function changeCartQty(id, d, size) {
+    var item;
+    if (size) {
+        var key = id + '_' + size;
+        item = cart.find(function(c) { return (c.id + '_' + c.size) === key; });
     } else {
-        item.qty += d;
-        if (item.qty <= 0) { cart = cart.filter(function(c) { return c.id !== id; }); }
+        item = cart.find(function(c) { return c.id === id && !c.size; });
+    }
+    if (!item) return;
+    item.qty += d;
+    if (item.qty <= 0) {
+        if (size) {
+            cart = cart.filter(function(c) { return (c.id + '_' + c.size) !== (id + '_' + size); });
+        } else {
+            cart = cart.filter(function(c) { return !(c.id === id && !c.size); });
+        }
     }
     saveCart();
     renderCart();
@@ -603,22 +605,24 @@ function changeCartQty(id, d) {
 
 function renderCart() {
     var c = document.getElementById('cartContent');
-    if (cart.length === 0) { c.innerHTML = '<div class="cart-empty"><span>&#128722;</span><p>Корзина пуста</p></div>'; return; }
+    if (cart.length === 0) { c.innerHTML = '<div class="cart-empty"><span>&#128722;</span><p>\u041A\u043E\u0440\u0437\u0438\u043D\u0430 \u043F\u0443\u0441\u0442\u0430</p></div>'; return; }
     var total = 0;
     var items = '';
     for (var i = 0; i < cart.length; i++) {
         var x = cart[i];
         var p = products.find(function(y) { return y.id === x.id; });
         if (!p) continue;
-        var qty = parseFloat(x.qty) || 0;
-        var isBeer = p.category === '\u041F\u0438\u0432\u043E';
-        var t = getPrice(p, qty);
-        total += t;
-        var qtyDisplay = isBeer ? qty + ' \u043B' : qty;
-        var priceLabel = isBeer ? t + ' \u20B8' : p.price + ' \u20B8/' + esc(p.unit);
-        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + esc(p.name) + '</h4><span class="price">' + priceLabel + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-1)">-</button><span>' + qtyDisplay + '</span><button onclick="changeCartQty(' + p.id + ',1)">+</button></div></div>';
+        var qty = parseInt(x.qty) || 1;
+        var isBeer = !!x.size;
+        var unitPrice = getUnitPrice(p, x.size || 1);
+        var lineTotal = unitPrice * qty;
+        total += lineTotal;
+        var nameDisplay = isBeer ? esc(p.name) + ' (' + x.size + ' \u043B)' : esc(p.name);
+        var priceLabel = unitPrice + ' \u20B8' + (isBeer ? '' : '/' + esc(p.unit));
+        var sizeArg = isBeer ? ',' + x.size : '';
+        items += '<div class="cart-item"><div class="cart-item-img">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="cart-item-info"><h4>' + nameDisplay + '</h4><span class="price">' + priceLabel + '</span></div><div class="cart-item-actions"><button onclick="changeCartQty(' + p.id + ',-1' + sizeArg + ')">-</button><span>' + qty + '</span><button onclick="changeCartQty(' + p.id + ',1' + sizeArg + ')">+</button></div></div>';
     }
-    c.innerHTML = items + '<div class="cart-summary"><div class="cart-summary-row"><span>Итого</span><span>' + total + ' \u20B8</span></div></div><button class="btn btn-primary" onclick="showCheckout()" style="margin-top:16px">Оформить заказ</button>';
+    c.innerHTML = items + '<div class="cart-summary"><div class="cart-summary-row"><span>\u0418\u0442\u043E\u0433\u043E</span><span>' + total + ' \u20B8</span></div></div><button class="btn btn-primary" onclick="showCheckout()" style="margin-top:16px">\u041E\u0444\u043E\u0440\u043C\u0438\u0442\u044C \u0437\u0430\u043A\u0430\u0437</button>';
 }
 
 function showCheckout() {
@@ -635,10 +639,11 @@ function placeOrder() {
     var itemsText = '';
     cart.forEach(function(c) {
         var p = products.find(function(x) { return x.id === c.id; });
-        var itemTotal = getPrice(p, c.qty);
-        total += itemTotal;
-        var qtyLabel = p.category === '\u041F\u0438\u0432\u043E' ? c.qty + '\u043B' : ' × ' + c.qty;
-        itemsText += '• ' + p.name + ' ' + qtyLabel + ' = ' + itemTotal + ' \u20B8\n';
+        var unitPrice = getUnitPrice(p, c.size || 1);
+        var lineTotal = unitPrice * (c.qty || 1);
+        total += lineTotal;
+        var qtyLabel = c.size ? ' ' + c.size + '\u043B \u00D7 ' + c.qty : ' \u00D7 ' + c.qty;
+        itemsText += '\u2022 ' + p.name + qtyLabel + ' = ' + lineTotal + ' \u20B8\n';
     });
 
     var order = {
@@ -648,7 +653,7 @@ function placeOrder() {
         comment: comment,
         items: cart.map(function(c) {
             var p = products.find(function(x) { return x.id === c.id; });
-            return {name: p.name, qty: c.qty, price: getPrice(p, c.qty), unit: p.unit};
+            return {name: p.name, qty: c.qty, size: c.size || 0, price: getUnitPrice(p, c.size || 1), unit: p.unit};
         }),
         total: total,
         status: 'new',
@@ -680,7 +685,7 @@ function renderAdminOrders() {
     var f = document.getElementById('orderFilter') ? document.getElementById('orderFilter').value : 'all';
     var list = f === 'all' ? orders : orders.filter(function(o) { return o.status === f; });
     document.getElementById('orderList').innerHTML = list.length === 0 ? '<p style="color:var(--txt3)">Заказов нет</p>' : list.map(function(o) {
-        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' \u2014 ' + esc(o.name) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return esc(i.name) + ' \u00D7 ' + i.qty + (i.unit ? esc(i.unit) : ''); }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' \u20B8</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(o.date) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
+        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' \u2014 ' + esc(o.name) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return esc(i.name) + (i.size ? ' ' + i.size + '\u043B' : '') + ' \u00D7 ' + i.qty; }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' \u20B8</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(o.date) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
     }).join('');
 }
 
@@ -693,7 +698,7 @@ function exportOrdersExcel() {
     if (orders.length === 0) { showToast('Нет заказов для экспорта'); return; }
     var csv = '\uFEFFНомер;Имя;Телефон;Комментарий;Товары;Сумма;Статус;Дата\n';
     orders.forEach(function(o) {
-        var items = o.items.map(function(i) { return i.name + ' x' + i.qty + (i.unit || ''); }).join(', ');
+        var items = o.items.map(function(i) { return i.name + (i.size ? ' ' + i.size + '\u043B' : '') + ' x' + i.qty; }).join(', ');
         csv += o.id + ';' + esc(o.name) + ';' + esc(o.phone) + ';' + esc(o.comment || '') + ';' + esc(items) + ';' + o.total + ';' + esc(o.status) + ';' + esc(o.date) + '\n';
     });
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
@@ -771,13 +776,13 @@ function togglePriceFields() {
     document.getElementById('priceBeer').style.display = isBeer ? '' : 'none';
 }
 
-function getPrice(p, qty) {
+function getUnitPrice(p, size) {
     if (p.category === '\u041F\u0438\u0432\u043E') {
-        if (qty === 1.5 && p.price15) return p.price15;
-        if (qty === 2 && p.price2) return p.price2;
+        if (size === 1.5 && p.price15) return p.price15;
+        if (size === 2 && p.price2) return p.price2;
         return p.price;
     }
-    return p.price * qty;
+    return p.price;
 }
 
 // ===== PRODUCT FORM =====
