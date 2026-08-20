@@ -228,7 +228,7 @@
                     <div class="form-group"><label>Название</label><input type="text" id="prodName"></div>
                     <div class="form-row">
                         <div class="form-group"><label>Цена (₸)</label><input type="number" id="prodPrice"></div>
-                        <div class="form-group"><label>Единица</label><select id="prodUnit"><option value="л">за литр</option><option value="кг">за кг</option><option value="шт">за штуку</option></select></div>
+                        <div class="form-group"><label>Единица</label><select id="prodUnit"><option value="л">за литр</option><option value="1.5л">за 1.5 литра</option><option value="кг">за кг</option><option value="шт">за штуку</option></select></div>
                     </div>
                     <div class="form-group"><label>Категория</label><select id="prodCategory"><option>Пиво</option><option>Снеки</option><option>Закуски</option><option>Напитки</option></select></div>
                     <div class="form-group">
@@ -243,10 +243,7 @@
                         <input type="hidden" id="prodImage">
                     </div>
                     <div class="form-group"><label>Описание</label><textarea id="prodDesc" rows="3"></textarea></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Остаток</label><input type="number" id="prodStock"></div>
-                        <div class="form-group"><label>Тег</label><input type="text" id="prodTag" placeholder="Хит / Новинка"></div>
-                    </div>
+                    <div class="form-group"><label>Тег</label><input type="text" id="prodTag" placeholder="Хит / Новинка"></div>
                     <input type="hidden" id="editId">
                     <button class="btn btn-primary" onclick="saveProduct()" style="margin-bottom:8px">Сохранить</button>
                     <button class="btn btn-outline" onclick="hideProductForm()">Отмена</button>
@@ -355,18 +352,18 @@ function loadData() {
 
 function getDefaultProducts() {
     return [
-        {id:1,name:'Pilsner Urquell',price:850,unit:'л',category:'Пиво',emoji:'🍺',desc:'Классический чешский пильзнер.',stock:50,tag:'Хит',image:''},
-        {id:2,name:'Guinness Draught',price:950,unit:'л',category:'Пиво',emoji:'🍺',desc:'Насыщенный стаут с кремовой пенкой.',stock:30,tag:'',image:''},
-        {id:3,name:'Craft IPA',price:1100,unit:'л',category:'Пиво',emoji:'🍺',desc:'Местный крафт с тропическими нотами.',stock:20,tag:'Новинка',image:''},
-        {id:4,name:'Corona Extra',price:750,unit:'л',category:'Пиво',emoji:'🍺',desc:'Мексиканское пиво с лаймом.',stock:40,tag:'',image:''},
-        {id:5,name:'Heineken',price:700,unit:'л',category:'Пиво',emoji:'🍺',desc:'Нидерландский лагер.',stock:45,tag:'',image:''},
-        {id:6,name:'Микс орехов',price:1200,unit:'кг',category:'Снеки',emoji:'🥜',desc:'Арахис, кешью, миндаль, фисташки.',stock:30,tag:'Хит',image:''},
-        {id:7,name:'Чипсы с трюфелем',price:800,unit:'кг',category:'Снеки',emoji:'🍟',desc:'Тонкие чипсы с трюфельным маслом.',stock:25,tag:'',image:''},
-        {id:8,name:'Сухарики',price:600,unit:'кг',category:'Снеки',emoji:'🥖',desc:'Хрустящие сухарики с чесноком.',stock:35,tag:'',image:''},
-        {id:9,name:'Сушёная рыба',price:3500,unit:'кг',category:'Закуски',emoji:'🍣',desc:'Натуральная сушёная красная рыба.',stock:10,tag:'Премиум',image:''},
-        {id:10,name:'Сырная тарелка',price:2500,unit:'шт',category:'Закуски',emoji:'🧀',desc:'Ассорти из 5 видов сыра.',stock:15,tag:'',image:''},
-        {id:11,name:'Кола 0.5л',price:300,unit:'шт',category:'Напитки',emoji:'🥤',desc:'Coca-Cola, охлаждённая.',stock:60,tag:'',image:''},
-        {id:12,name:'Вода',price:200,unit:'шт',category:'Напитки',emoji:'💧',desc:'Минеральная вода 0.5л.',stock:80,tag:'',image:''}
+        {id:1,name:'Pilsner Urquell',price:850,unit:'л',category:'Пиво',emoji:'🍺',desc:'Классический чешский пильзнер.',tag:'Хит',image:''},
+        {id:2,name:'Guinness Draught',price:950,unit:'л',category:'Пиво',emoji:'🍺',desc:'Насыщенный стаут с кремовой пенкой.',tag:'',image:''},
+        {id:3,name:'Craft IPA',price:1100,unit:'л',category:'Пиво',emoji:'🍺',desc:'Местный крафт с тропическими нотами.',tag:'Новинка',image:''},
+        {id:4,name:'Corona Extra',price:750,unit:'л',category:'Пиво',emoji:'🍺',desc:'Мексиканское пиво с лаймом.',tag:'',image:''},
+        {id:5,name:'Heineken',price:700,unit:'л',category:'Пиво',emoji:'🍺',desc:'Нидерландский лагер.',tag:'',image:''},
+        {id:6,name:'Микс орехов',price:1200,unit:'кг',category:'Снеки',emoji:'🥜',desc:'Арахис, кешью, миндаль, фисташки.',tag:'Хит',image:''},
+        {id:7,name:'Чипсы с трюфелем',price:800,unit:'кг',category:'Снеки',emoji:'🍟',desc:'Тонкие чипсы с трюфельным маслом.',tag:'',image:''},
+        {id:8,name:'Сухарики',price:600,unit:'кг',category:'Снеки',emoji:'🥖',desc:'Хрустящие сухарики с чесноком.',tag:'',image:''},
+        {id:9,name:'Сушёная рыба',price:3500,unit:'кг',category:'Закуски',emoji:'🍣',desc:'Натуральная сушёная красная рыба.',tag:'Премиум',image:''},
+        {id:10,name:'Сырная тарелка',price:2500,unit:'шт',category:'Закуски',emoji:'🧀',desc:'Ассорти из 5 видов сыра.',tag:'',image:''},
+        {id:11,name:'Кола 0.5л',price:300,unit:'шт',category:'Напитки',emoji:'🥤',desc:'Coca-Cola, охлаждённая.',tag:'',image:''},
+        {id:12,name:'Вода',price:200,unit:'шт',category:'Напитки',emoji:'💧',desc:'Минеральная вода 0.5л.',tag:'',image:''}
     ];
 }
 
@@ -383,7 +380,6 @@ function saveProducts() {
             unit: p.unit,
             category: p.category,
             desc: p.desc,
-            stock: p.stock,
             tag: p.tag || '',
             emoji: p.emoji || '🍺',
             image: p.image || ''
@@ -455,7 +451,7 @@ function renderProducts() {
         return mc && ms;
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
-        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span>' + (p.stock > 0 ? '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>' : '') + '</div></div></div>';
+        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button></div></div></div>';
     }).join('');
 }
 
@@ -473,7 +469,7 @@ function showDetail(id) {
     if (!p) return;
     var inCart = cart.find(function(c) { return c.id === id; });
     var qty = inCart ? inCart.qty : 1;
-    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + (p.stock > 0 ? ' \u2022 В наличии' : ' \u2022 Нет') + '</div><div class="desc">' + esc(p.desc) + '</div><div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span>' + (p.stock > 0 ? '<div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div>' : '') + '</div>' + (p.stock > 0 ? '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В корзину</button>' : '') + '</div>';
+    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + '</div><div class="desc">' + esc(p.desc) + '</div><div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">' + qty + '</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div><button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В корзину</button></div>';
     document.getElementById('modal').classList.add('active');
 }
 
@@ -484,8 +480,6 @@ function changeQty(d, id) {
     var el = document.getElementById('mQty');
     var q = parseInt(el.textContent) + d;
     if (q < 1) q = 1;
-    var p = products.find(function(x) { return x.id === id; });
-    if (q > p.stock) q = p.stock;
     el.textContent = q;
 }
 
@@ -567,11 +561,6 @@ function placeOrder() {
         date: new Date().toLocaleString('ru-RU')
     };
 
-    cart.forEach(function(c) {
-        var p = products.find(function(x) { return x.id === c.id; });
-        p.stock -= c.qty;
-    });
-
     orders.unshift(order);
     cart = [];
     saveProducts();
@@ -635,7 +624,7 @@ function clearOrders() {
 // ===== ADMIN PRODUCTS =====
 function renderAdminProducts() {
     document.getElementById('productList').innerHTML = products.map(function(p) {
-        return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + ' \u2022 Остаток: ' + p.stock + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">\u270E</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">\uD83D\uDDD1</button></div></div>';
+        return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">\u270E</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">\uD83D\uDDD1</button></div></div>';
     }).join('');
 }
 
@@ -689,7 +678,6 @@ function showAddProduct() {
     document.getElementById('prodUnit').value = 'л';
     document.getElementById('prodCategory').value = 'Пиво';
     document.getElementById('prodDesc').value = '';
-    document.getElementById('prodStock').value = '';
     document.getElementById('prodTag').value = '';
     document.getElementById('prodImage').value = '';
     document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
@@ -707,7 +695,6 @@ function editProduct(id) {
     document.getElementById('prodUnit').value = p.unit;
     document.getElementById('prodCategory').value = p.category;
     document.getElementById('prodDesc').value = p.desc;
-    document.getElementById('prodStock').value = p.stock;
     document.getElementById('prodTag').value = p.tag;
     document.getElementById('prodImage').value = p.image || '';
     if (p.image) {
@@ -734,7 +721,6 @@ function saveProduct() {
         unit: document.getElementById('prodUnit').value,
         category: document.getElementById('prodCategory').value,
         desc: document.getElementById('prodDesc').value.trim(),
-        stock: parseInt(document.getElementById('prodStock').value) || 0,
         tag: document.getElementById('prodTag').value.trim(),
         image: document.getElementById('prodImage').value,
         emoji: '🍺'
