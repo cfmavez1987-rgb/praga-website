@@ -48,7 +48,7 @@
         .product-price{font-weight:700;color:var(--amber)}
         .product-price small{font-size:0.7rem;color:var(--txt3);font-weight:400}
         .cart-add-btn{width:32px;height:32px;border-radius:8px;background:rgba(212,148,10,0.15);border:none;color:var(--amber);font-size:1.2rem;cursor:pointer}
-        .size-popup{position:absolute;bottom:100%;right:0;background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:4px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:flex;gap:2px}
+        .size-popup{position:fixed;background:var(--card);border:1px solid var(--brd);border-radius:10px;padding:4px;z-index:150;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:flex;flex-direction:column;gap:2px}
         .size-popup-btn{padding:6px 10px;border-radius:8px;background:transparent;border:none;color:var(--txt);font-size:0.75rem;font-weight:600;cursor:pointer;white-space:nowrap}
         .size-popup-btn:hover{background:var(--amber);color:var(--bg)}
         .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:flex-end;justify-content:center}
@@ -551,8 +551,16 @@ function showSizePopup(id, btn) {
         b.onclick = function(e) { e.stopPropagation(); addBeerCart(id, s.v); closeSizePopup(); };
         popup.appendChild(b);
     });
-    btn.parentNode.style.position = 'relative';
-    btn.parentNode.appendChild(popup);
+    document.body.appendChild(popup);
+    var rect = btn.getBoundingClientRect();
+    var pw = popup.offsetWidth;
+    var ph = popup.offsetHeight;
+    var left = rect.right - pw;
+    var top = rect.top - ph - 4;
+    if (left < 4) left = 4;
+    if (top < 4) top = rect.bottom + 4;
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
     setTimeout(function() {
         document.addEventListener('click', closeSizePopup, {once: true});
     }, 0);
