@@ -1,4 +1,8 @@
 {
-  "buildCommand": "mkdir -p public && cp -r website/* public/",
-  "outputDirectory": "public"
+  "buildCommand": "mkdir -p public && cp -r website/* public/ && cp -r app public/app",
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/app", "destination": "/app/app.html" },
+    { "source": "/app/(.*)", "destination": "/app/app.html" }
+  ]
 }
