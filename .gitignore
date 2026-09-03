@@ -6,3 +6,17 @@ Thumbs.db
 *.txt
 *.jpeg
 node_modules/
+
+# Firebase local tooling and credentials
+.firebase/
+firestore-debug.log
+firebase-debug.log
+emulator-data/
+service-account*.json
+*service-account*.json
+
+# Local Netlify folder
+.netlify
+.vercel
+.env*
+backups/

@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedInAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true;
+    }
+
+    function isShortString(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+
+    function isPrice(value) {
+      return value is number && value >= 0 && value <= 10000000;
+    }
+
+    function validProduct(data) {
+      return data.keys().hasAll([
+          'id', 'name', 'price', 'unit', 'category', 'desc', 'tag',
+          'emoji', 'image', 'active', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'name', 'price', 'price15', 'price2', 'unit', 'category',
+          'desc', 'tag', 'emoji', 'image', 'active', 'updatedAt'
+        ])
+        && data.id is int && data.id > 0
+        && isShortString(data.name, 120) && data.name.size() > 0
+        && isPrice(data.price)
+        && (!('price15' in data) || isPrice(data.price15))
+        && (!('price2' in data) || isPrice(data.price2))
+        && isShortString(data.unit, 20) && data.unit.size() > 0
+        && isShortString(data.category, 80) && data.category.size() > 0
+        && isShortString(data.desc, 1000)
+        && isShortString(data.tag, 80)
+        && isShortString(data.emoji, 16)
+        && isShortString(data.image, 700000)
+        && data.active is bool
+        && data.updatedAt == request.time;
+    }
+
+    function validPublicSettings(data) {
+      return data.keys().hasAll(['whatsapp', 'updatedAt'])
+        && data.keys().hasOnly(['whatsapp', 'updatedAt'])
+        && data.whatsapp is string
+        && data.whatsapp.matches('^[0-9]{10,15}$')
+        && data.updatedAt == request.time;
+    }
+
+    function validOrderItem(item) {
+      return item is map
+        && item.keys().hasAll(['productId', 'quantity', 'size'])
+        && item.keys().hasOnly(['productId', 'quantity', 'size'])
+        && item.productId is int && item.productId > 0
+        && item.quantity is int && item.quantity >= 1 && item.quantity <= 50
+        && item.size is number
+        && (item.size == 0 || item.size == 1 || item.size == 1.5 || item.size == 2);
+    }
+
+    function validCatalogOrderItem(item) {
+      let product = get(/databases/$(database)/documents/products/$(string(item.productId))).data;
+      return product.active == true
+        && (
+          (product.category != 'Пиво' && item.size == 0)
+          || (product.category == 'Пиво' && item.size == 1)
+          || (product.category == 'Пиво' && item.size == 1.5
+            && 'price15' in product && product.price15 > 0)
+          || (product.category == 'Пиво' && item.size == 2
+            && 'price2' in product && product.price2 > 0)
+        );
+    }
+
+    function validOrderItems(items) {
+      return items is list
+        && items.size() >= 1 && items.size() <= 10
+        && validOrderItem(items[0]) && validCatalogOrderItem(items[0])
+        && (items.size() < 2 || (validOrderItem(items[1]) && validCatalogOrderItem(items[1])))
+        && (items.size() < 3 || (validOrderItem(items[2]) && validCatalogOrderItem(items[2])))
+        && (items.size() < 4 || (validOrderItem(items[3]) && validCatalogOrderItem(items[3])))
+        && (items.size() < 5 || (validOrderItem(items[4]) && validCatalogOrderItem(items[4])))
+        && (items.size() < 6 || (validOrderItem(items[5]) && validCatalogOrderItem(items[5])))
+        && (items.size() < 7 || (validOrderItem(items[6]) && validCatalogOrderItem(items[6])))
+        && (items.size() < 8 || (validOrderItem(items[7]) && validCatalogOrderItem(items[7])))
+        && (items.size() < 9 || (validOrderItem(items[8]) && validCatalogOrderItem(items[8])))
+        && (items.size() < 10 || (validOrderItem(items[9]) && validCatalogOrderItem(items[9])));
+    }
+
+    function validNewOrder(data) {
+      return data.keys().hasAll([
+          'customerName', 'phone', 'comment', 'items', 'status',
+          'clientOrderId', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'customerName', 'phone', 'comment', 'items', 'status',
+          'clientOrderId', 'createdAt', 'updatedAt'
+        ])
+        && isShortString(data.customerName, 100) && data.customerName.size() >= 2
+        && data.phone is string && data.phone.matches('^[0-9+() -]{7,24}$')
+        && isShortString(data.comment, 500)
+        && validOrderItems(data.items)
+        && data.status == 'new'
+        && data.clientOrderId is string
+        && data.clientOrderId.matches('^[A-Za-z0-9_-]{16,80}$')
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isSignedInAdmin() && validProduct(request.resource.data);
+      allow update: if isSignedInAdmin()
+        && validProduct(request.resource.data)
+        && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedInAdmin();
+    }
+
+    match /publicSettings/{documentId} {
+      allow get: if documentId == 'store';
+      allow list: if false;
+      allow create, update: if documentId == 'store'
+        && isSignedInAdmin()
+        && validPublicSettings(request.resource.data);
+      allow delete: if false;
+    }
+
+    match /orders/{orderId} {
+      allow create: if request.auth == null
+        && validNewOrder(request.resource.data)
+        && orderId == request.resource.data.clientOrderId;
+      allow read: if isSignedInAdmin();
+      allow update: if isSignedInAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status in ['new', 'preparing', 'ready', 'completed', 'cancelled']
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isSignedInAdmin();
+    }
+
+    match /admins/{uid} {
+      allow read, write: if false;
+    }
+
+    match /shop/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

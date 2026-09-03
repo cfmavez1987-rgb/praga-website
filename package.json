@@ -1,0 +1,19 @@
+{
+  "name": "praga-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:rules",
+    "test:rules": "firebase emulators:exec --only firestore --project praga-store \"node --test tests/firestore.rules.test.js\"",
+    "migrate:dry-run": "node scripts/migrate-firestore.js",
+    "migrate:apply": "node scripts/migrate-firestore.js --apply",
+    "deploy:rules": "firebase deploy --only firestore:rules --project praga-store"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.0",
+    "firebase": "12.2.1",
+    "firebase-admin": "13.4.0",
+    "firebase-tools": "14.15.2"
+  }
+}
