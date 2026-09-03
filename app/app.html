@@ -476,6 +476,15 @@ function renderAdmin() {
 }
 
 // ===== PRODUCTS =====
+function productCard(p) {
+    var priceDisplay = isSized(p) ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
+    var addBtn = isSized(p)
+        ? ''
+        : '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>';
+    var meta = p.subcategory ? esc(p.category) + ' \u2022 ' + esc(p.subcategory) : esc(p.category);
+    return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + meta + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span>' + addBtn + '</div></div></div>';
+}
+
 function renderProducts() {
     var s = document.getElementById('searchInput').value.toLowerCase();
     var f = products.filter(function(p) {
@@ -484,14 +493,24 @@ function renderProducts() {
         var sub = !currentSub || !p.subcategory || p.subcategory === currentSub;
         return mc && ms && sub;
     });
-    document.getElementById('productGrid').innerHTML = f.map(function(p) {
-        var priceDisplay = isSized(p) ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
-        var addBtn = isSized(p)
-            ? ''
-            : '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>';
-        var meta = p.subcategory ? esc(p.category) + ' \u2022 ' + esc(p.subcategory) : esc(p.category);
-        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + meta + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span>' + addBtn + '</div></div></div>';
-    }).join('');
+    if (currentCat === '\u0421\u043D\u0435\u043A\u0438' && !currentSub) {
+        var subOrder = ['\u0421\u0435\u043C\u0435\u0447\u043A\u0438', '\u041E\u0440\u0435\u0445\u0438', '\u0421\u0443\u0445\u0430\u0440\u0438\u043A\u0438', '\u0427\u0438\u043F\u0441\u044B'];
+        var html = '';
+        subOrder.forEach(function(sub) {
+            var group = f.filter(function(p) { return p.subcategory === sub; });
+            if (group.length > 0) {
+                html += '<div style="grid-column:1/-1;margin:8px 0 4px"><h3 style="font-size:1rem;color:var(--amber)">' + esc(sub) + '</h3></div>';
+                html += group.map(productCard).join('');
+            }
+        });
+        var noSub = f.filter(function(p) { return !p.subcategory; });
+        if (noSub.length > 0) {
+            html += noSub.map(productCard).join('');
+        }
+        document.getElementById('productGrid').innerHTML = html;
+    } else {
+        document.getElementById('productGrid').innerHTML = f.map(productCard).join('');
+    }
 }
 
 function renderCategories() {
@@ -503,8 +522,7 @@ function renderCategories() {
     var subEl = document.getElementById('subcategories');
     var subMap = {
         '\u041F\u0438\u0432\u043E': ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435'],
-        '\u041D\u0430\u043F\u0438\u0442\u043A\u0438': ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435'],
-        '\u0421\u043D\u0435\u043A\u0438': ['\u0421\u0435\u043C\u0435\u0447\u043A\u0438', '\u041E\u0440\u0435\u0445\u0438', '\u0421\u0443\u0445\u0430\u0440\u0438\u043A\u0438', '\u0427\u0438\u043F\u0441\u044B']
+        '\u041D\u0430\u043F\u0438\u0442\u043A\u0438': ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435']
     };
     var subs = subMap[currentCat];
     if (subs) {
