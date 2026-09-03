@@ -1,5 +1,6 @@
 [build]
-  publish = "app"
+  command = "mkdir -p public && cp -r app/* public/"
+  publish = "public"
 
 [[redirects]]
   from = "/*"
