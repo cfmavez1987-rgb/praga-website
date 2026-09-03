@@ -1,8 +1,0 @@
-[build]
-  command = "mkdir -p public && cp -r app/* public/"
-  publish = "public"
-
-[[redirects]]
-  from = "/*"
-  to = "/app.html"
-  status = 200

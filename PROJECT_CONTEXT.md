@@ -8,7 +8,7 @@
 2. `app/` — PWA-каталог, корзина, оформление заказов и админ-панель;
 3. `smm/` — материалы для социальных сетей.
 
-Стек: статические HTML/CSS/JavaScript, Firebase SDK 9.23 compat, Firebase Authentication и Cloud Firestore. Лендинг публикуется на Vercel, PWA — на Netlify.
+Стек: статические HTML/CSS/JavaScript, Firebase SDK 9.23 compat, Firebase Authentication и Cloud Firestore. Лендинг и PWA публикуются на Vercel.
 
 ## Firebase
 
@@ -159,5 +159,5 @@ Android получает `assets/index.html`, iOS — `Resources/index.html`. С
 ## Ссылки
 
 - сайт: https://praga-website.vercel.app/
-- PWA: https://praga-webapp.netlify.app/
+- PWA: https://praga-website.vercel.app/app
 - Firebase Console: https://console.firebase.google.com/project/praga-store
