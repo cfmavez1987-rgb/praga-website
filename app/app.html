@@ -312,12 +312,38 @@ function esc(s) {
     return d.innerHTML;
 }
 
+// ===== SEED DEFAULT PRODUCTS =====
+var DEFAULT_PRODUCTS = [
+    {id:2,name:'Guinness Draught',price:950,price15:1350,price2:1700,unit:'л',category:'Пиво',emoji:'🍺',desc:'Насыщенный стаут с кремовой пенкой.',tag:'',image:'',active:true},
+    {id:3,name:'Craft IPA',price:1100,price15:1550,price2:2000,unit:'л',category:'Пиво',emoji:'🍺',desc:'Местный крафт с тропическими нотами.',tag:'Новинка',image:'',active:true},
+    {id:4,name:'Corona Extra',price:750,price15:1050,price2:1350,unit:'л',category:'Пиво',emoji:'🍺',desc:'Мексиканское пиво с лаймом.',tag:'',image:'',active:true},
+    {id:5,name:'Heineken',price:700,price15:1000,price2:1300,unit:'л',category:'Пиво',emoji:'🍺',desc:'Нидерландский лагер.',tag:'',image:'',active:true},
+    {id:6,name:'Микс орехов',price:1200,unit:'кг',category:'Снеки',emoji:'🥜',desc:'Арахис, кешью, миндаль, фисташки.',tag:'Хит',image:'',active:true},
+    {id:7,name:'Чипсы с трюфелем',price:800,unit:'кг',category:'Снеки',emoji:'🍟',desc:'Тонкие чипсы с трюфельным маслом.',tag:'',image:'',active:true},
+    {id:8,name:'Сухарики',price:600,unit:'кг',category:'Снеки',emoji:'🥖',desc:'Хрустящие сухарики с чесноком.',tag:'',image:'',active:true},
+    {id:9,name:'Сушёная рыба',price:3500,unit:'кг',category:'Закуски',emoji:'🍣',desc:'Натуральная сушёная красная рыба.',tag:'Премиум',image:'',active:true},
+    {id:10,name:'Сырная тарелка',price:2500,unit:'шт',category:'Закуски',emoji:'🧀',desc:'Ассорти из 5 видов сыра.',tag:'',image:'',active:true},
+    {id:11,name:'Кола 0.5л',price:300,unit:'шт',category:'Напитки',emoji:'🥤',desc:'Coca-Cola, охлаждённая.',tag:'',image:'',active:true},
+    {id:12,name:'Вода',price:200,unit:'шт',category:'Напитки',emoji:'💧',desc:'Минеральная вода 0.5л.',tag:'',image:'',active:true}
+];
+
+function seedDefaults() {
+    var batch = db.batch();
+    DEFAULT_PRODUCTS.forEach(function(p) {
+        var ref = db.collection('products').doc(String(p.id));
+        batch.set(ref, productDocument(p));
+    });
+    return batch.commit();
+}
+
 // ===== LOAD FROM FIREBASE =====
 function loadCatalog() {
     return db.collection('products').where('active', '==', true).get().then(function(snapshot) {
         products = snapshot.docs.map(function(doc) { return doc.data(); });
         products.sort(function(a, b) { return a.id - b.id; });
-        if (products.length === 0) showToast('Каталог пока пуст');
+        if (products.length === 0) {
+            return seedDefaults().then(function() { return loadCatalog(); });
+        }
         renderCategories();
         renderProducts();
         updateBadge();
