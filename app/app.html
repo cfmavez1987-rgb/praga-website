@@ -32,8 +32,9 @@
         .nav-item.active{color:var(--amber)}
         .search-box{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--brd);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px}
         .search-box input{flex:1;background:none;border:none;color:var(--txt);font-size:1rem;outline:none}
-        .categories{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:16px;scrollbar-width:none}
+        .categories{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:12px;margin-bottom:8px;scrollbar-width:none}
         .categories::-webkit-scrollbar{display:none}
+        .subcategories{display:flex;gap:8px;padding-bottom:12px;margin-bottom:16px}
         .cat-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;background:var(--card);border:1px solid var(--brd);color:var(--txt2);font-size:0.85rem;cursor:pointer}
         .cat-btn.active{background:var(--amber);border-color:var(--amber);color:var(--bg);font-weight:600}
         .product-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -157,6 +158,7 @@
                 <input type="text" placeholder="Поиск..." id="searchInput" oninput="renderProducts()">
             </div>
             <div class="categories" id="categories"></div>
+            <div class="subcategories" id="subcategories"></div>
             <div class="product-grid" id="productGrid"></div>
         </div>
 
@@ -494,17 +496,20 @@ function renderProducts() {
 function renderCategories() {
     var cats = ['Все'];
     products.forEach(function(p) { if (cats.indexOf(p.category) < 0) cats.push(p.category); });
-    var html = cats.map(function(c) {
+    document.getElementById('categories').innerHTML = cats.map(function(c) {
         return '<button class="cat-btn ' + (c === currentCat ? 'active' : '') + '" onclick="currentCat=\'' + esc(c) + '\';currentSub=\'\';renderCategories();renderProducts()">' + esc(c) + '</button>';
     }).join('');
+    var subEl = document.getElementById('subcategories');
     if (currentCat === '\u041F\u0438\u0432\u043E' || currentCat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') {
         var subs = ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435'];
-        html += '<span style="color:var(--txt3);padding:8px 4px">|</span>';
-        html += subs.map(function(s) {
+        subEl.innerHTML = subs.map(function(s) {
             return '<button class="cat-btn ' + (currentSub === s ? 'active' : '') + '" onclick="currentSub=\'' + s + '\';renderCategories();renderProducts()">' + s + '</button>';
         }).join('');
+        subEl.style.display = '';
+    } else {
+        subEl.innerHTML = '';
+        subEl.style.display = 'none';
     }
-    document.getElementById('categories').innerHTML = html;
 }
 
 // ===== DETAIL =====
