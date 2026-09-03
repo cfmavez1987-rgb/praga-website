@@ -305,6 +305,10 @@ var editId = null;
 var selectedSize = 1;
 var adminReady = false;
 
+function isSized(cat) {
+    return cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438';
+}
+
 function esc(s) {
     if (!s) return '';
     var d = document.createElement('div');
@@ -474,8 +478,8 @@ function renderProducts() {
         return mc && ms;
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
-        var priceDisplay = p.category === '\u041F\u0438\u0432\u043E' ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
-        var addBtn = p.category === '\u041F\u0438\u0432\u043E'
+        var priceDisplay = isSized(p.category) ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
+        var addBtn = isSized(p.category)
             ? ''
             : '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>';
         return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span>' + addBtn + '</div></div></div>';
@@ -495,7 +499,7 @@ function showDetail(id) {
     var p = products.find(function(x) { return x.id === id; });
     if (!p) return;
     var controls = '';
-    if (p.category === '\u041F\u0438\u0432\u043E') {
+    if (isSized(p.category)) {
         selectedSize = 1;
         var szPrice = getUnitPrice(p, selectedSize);
         controls = '<div class="price-row"><span class="price-big" id="modalPrice">' + szPrice + ' <small>\u20B8</small></span></div><div class="size-selector"><button class="size-btn active" onclick="selectSize(1,this,' + id + ')">1 \u043B</button><button class="size-btn" onclick="selectSize(1.5,this,' + id + ')">1.5 \u043B</button><button class="size-btn" onclick="selectSize(2,this,' + id + ')">2 \u043B</button></div><div class="qty-control" style="justify-content:center;margin-bottom:16px"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">1</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div>';
@@ -530,7 +534,7 @@ function selectSize(size, el, id) {
 
 function addCartFromModal(id) {
     var p = products.find(function(x) { return x.id === id; });
-    if (p && p.category === '\u041F\u0438\u0432\u043E') {
+    if (p && isSized(p.category)) {
         var beerQty = parseInt(document.getElementById('mQty').textContent) || 1;
         addBeerCart(id, selectedSize, beerQty);
     } else {
@@ -830,13 +834,13 @@ function handlePhoto(e) {
 // ===== PRICE HELPERS =====
 function togglePriceFields() {
     var cat = document.getElementById('prodCategory').value;
-    var isBeer = cat === '\u041F\u0438\u0432\u043E';
-    document.getElementById('priceSingle').style.display = isBeer ? 'none' : '';
-    document.getElementById('priceBeer').style.display = isBeer ? '' : 'none';
+    var sized = isSized(cat);
+    document.getElementById('priceSingle').style.display = sized ? 'none' : '';
+    document.getElementById('priceBeer').style.display = sized ? '' : 'none';
 }
 
 function getUnitPrice(p, size) {
-    if (p.category === '\u041F\u0438\u0432\u043E') {
+    if (isSized(p.category)) {
         if (size === 1.5 && p.price15) return p.price15;
         if (size === 2 && p.price2) return p.price2;
         return p.price;
@@ -897,7 +901,7 @@ function hideProductForm() {
 function saveProduct() {
     var name = document.getElementById('prodName').value.trim();
     var cat = document.getElementById('prodCategory').value;
-    var isBeer = cat === 'Пиво';
+    var isBeer = isSized(cat);
     var price = isBeer ? parseInt(document.getElementById('prodPrice1').value) : parseInt(document.getElementById('prodPrice').value);
     if (!name || !price) { showToast('Заполните название и цену'); return; }
     var data = {
