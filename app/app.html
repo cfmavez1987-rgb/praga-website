@@ -236,7 +236,7 @@
                 <div class="checkout-form" style="margin-top:16px">
                     <div class="form-group"><label>Название</label><input type="text" id="prodName"></div>
                     <div class="form-group"><label>Категория</label><select id="prodCategory" onchange="togglePriceFields();toggleSubcategory()"><option>Пиво</option><option>Снеки</option><option>Закуски</option><option>Напитки</option></select></div>
-                    <div class="form-group" id="subcategoryGroup"><label>Тип</label><select id="prodSubcategory"><option value="Разливное">Разливное</option><option value="Бутылочное">Бутылочное</option></select></div>
+                    <div class="form-group" id="subcategoryGroup"><label>Тип</label><select id="prodSubcategory" onchange="togglePriceFields()"><option value="Разливное">Разливное</option><option value="Бутылочное">Бутылочное</option></select></div>
                     <div id="priceSingle" class="form-row" style="display:none">
                         <div class="form-group"><label>Цена (₸)</label><input type="number" id="prodPrice"></div>
                         <div class="form-group"><label>Единица</label><select id="prodUnit"><option value="кг">за кг</option><option value="шт">за штуку</option></select></div>
@@ -309,8 +309,9 @@ var editId = null;
 var selectedSize = 1;
 var adminReady = false;
 
-function isSized(cat) {
-    return cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438';
+function isSized(p) {
+    if (p.subcategory === '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435') return false;
+    return p.category === '\u041F\u0438\u0432\u043E' || p.category === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438';
 }
 
 function esc(s) {
@@ -484,8 +485,8 @@ function renderProducts() {
         return mc && ms && sub;
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
-        var priceDisplay = isSized(p.category) ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
-        var addBtn = isSized(p.category)
+        var priceDisplay = isSized(p) ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
+        var addBtn = isSized(p)
             ? ''
             : '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>';
         var meta = p.subcategory ? esc(p.category) + ' \u2022 ' + esc(p.subcategory) : esc(p.category);
@@ -517,7 +518,7 @@ function showDetail(id) {
     var p = products.find(function(x) { return x.id === id; });
     if (!p) return;
     var controls = '';
-    if (isSized(p.category)) {
+    if (isSized(p)) {
         selectedSize = 1;
         var szPrice = getUnitPrice(p, selectedSize);
         controls = '<div class="price-row"><span class="price-big" id="modalPrice">' + szPrice + ' <small>\u20B8</small></span></div><div class="size-selector"><button class="size-btn active" onclick="selectSize(1,this,' + id + ')">1 \u043B</button><button class="size-btn" onclick="selectSize(1.5,this,' + id + ')">1.5 \u043B</button><button class="size-btn" onclick="selectSize(2,this,' + id + ')">2 \u043B</button></div><div class="qty-control" style="justify-content:center;margin-bottom:16px"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">1</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div>';
@@ -552,7 +553,7 @@ function selectSize(size, el, id) {
 
 function addCartFromModal(id) {
     var p = products.find(function(x) { return x.id === id; });
-    if (p && isSized(p.category)) {
+    if (p && isSized(p)) {
         var beerQty = parseInt(document.getElementById('mQty').textContent) || 1;
         addBeerCart(id, selectedSize, beerQty);
     } else {
@@ -853,7 +854,8 @@ function handlePhoto(e) {
 // ===== PRICE HELPERS =====
 function togglePriceFields() {
     var cat = document.getElementById('prodCategory').value;
-    var sized = isSized(cat);
+    var sub = document.getElementById('prodSubcategory').value;
+    var sized = (cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') && sub !== '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435';
     document.getElementById('priceSingle').style.display = sized ? 'none' : '';
     document.getElementById('priceBeer').style.display = sized ? '' : 'none';
 }
@@ -861,10 +863,11 @@ function togglePriceFields() {
 function toggleSubcategory() {
     var cat = document.getElementById('prodCategory').value;
     document.getElementById('subcategoryGroup').style.display = (cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') ? '' : 'none';
+    togglePriceFields();
 }
 
 function getUnitPrice(p, size) {
-    if (isSized(p.category)) {
+    if (isSized(p)) {
         if (size === 1.5 && p.price15) return p.price15;
         if (size === 2 && p.price2) return p.price2;
         return p.price;
@@ -929,7 +932,8 @@ function hideProductForm() {
 function saveProduct() {
     var name = document.getElementById('prodName').value.trim();
     var cat = document.getElementById('prodCategory').value;
-    var isBeer = isSized(cat);
+    var sub = document.getElementById('prodSubcategory').value;
+    var isBeer = (cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') && sub !== '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435';
     var price = isBeer ? parseInt(document.getElementById('prodPrice1').value) : parseInt(document.getElementById('prodPrice').value);
     if (!name || !price) { showToast('Заполните название и цену'); return; }
     var data = {
