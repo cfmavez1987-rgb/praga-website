@@ -12,6 +12,7 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <style>
         :root{--bg:#0D0B08;--card:#1A1714;--amber:#D4940A;--amber-l:#F5B731;--txt:#F2E8D5;--txt2:#A89B8C;--txt3:#6B6055;--brd:#2A2520;--danger:#E74C3C;--success:#27AE60;--radius:12px}
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -172,12 +173,12 @@
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.5" style="margin-bottom:16px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <h2>Вход в админку</h2>
                     <div class="form-group">
-                        <label>Логин</label>
-                        <input type="text" id="adminLogin" placeholder="Введите логин">
+                        <label>Email</label>
+                        <input type="email" id="adminLogin" placeholder="admin@example.com" autocomplete="username">
                     </div>
                     <div class="form-group">
                         <label>Пароль</label>
-                        <input type="password" id="adminPassword" placeholder="Введите пароль">
+                        <input type="password" id="adminPassword" placeholder="Введите пароль" autocomplete="current-password">
                     </div>
                     <button class="btn btn-primary" onclick="adminLogin()">Войти</button>
                 </div>
@@ -186,7 +187,10 @@
 
         <!-- ADMIN -->
         <div class="page" id="page-admin">
-            <h2 class="section-title">Панель администратора</h2>
+            <div class="admin-header">
+                <h2 class="section-title" style="margin-bottom:0">Панель администратора</h2>
+                <button class="btn btn-outline" style="width:auto;padding:8px 14px" onclick="adminLogout()">Выйти</button>
+            </div>
             <div class="admin-tabs">
                 <button class="admin-tab active" onclick="switchTab('products')">Товары</button>
                 <button class="admin-tab" onclick="switchTab('orders')">Заказы</button>
@@ -205,14 +209,13 @@
                 <div class="admin-header">
                     <h3>Заказы</h3>
                     <div style="display:flex;gap:8px;align-items:center">
-                        <select id="orderFilter" onchange="renderOrders()" style="padding:8px;border-radius:8px;background:var(--bg);border:1px solid var(--brd);color:var(--txt)">
+                        <select id="orderFilter" onchange="renderAdminOrders()" style="padding:8px;border-radius:8px;background:var(--bg);border:1px solid var(--brd);color:var(--txt)">
                             <option value="all">Все</option>
                             <option value="new">Новые</option>
                             <option value="preparing">Готовятся</option>
                             <option value="ready">Готовы</option>
                         </select>
                         <button class="btn btn-outline" style="width:auto;padding:8px 14px;font-size:0.8rem" onclick="exportOrdersExcel()">Excel</button>
-                        <button class="btn btn-danger" style="width:auto;padding:8px 14px;font-size:0.8rem" onclick="clearOrders()">Очистить</button>
                     </div>
                 </div>
                 <div id="orderList"></div>
@@ -221,9 +224,7 @@
             <div class="admin-section" id="sec-settings">
                 <h3>Настройки</h3>
                 <div class="settings-form">
-                    <div class="form-group"><label>Телефон WhatsApp</label><input type="tel" id="whatsappPhone" placeholder="77001234567"></div>
-                    <div class="form-group"><label>Логин админа</label><input type="text" id="setAdminLogin" placeholder="admin"></div>
-                    <div class="form-group"><label>Пароль админа</label><input type="password" id="setAdminPass" placeholder="Введите новый пароль"></div>
+                    <div class="form-group"><label>Телефон WhatsApp</label><input type="tel" id="whatsappPhone" placeholder="77020615722"></div>
                     <button class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
                 </div>
             </div>
@@ -293,14 +294,16 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 var products = [];
 var cart = JSON.parse(localStorage.getItem('praga_cart')) || [];
 var orders = [];
-var settings = {whatsapp:'77001234567', adminLogin:'admin', adminPass:'12345'};
+var settings = {whatsapp:'77020615722'};
 var currentCat = 'Все';
 var editId = null;
 var selectedSize = 1;
+var adminReady = false;
 
 function esc(s) {
     if (!s) return '';
@@ -310,105 +313,75 @@ function esc(s) {
 }
 
 // ===== LOAD FROM FIREBASE =====
-function loadData() {
-    // Загружаем товары
-    db.collection('shop').get().then(function(snapshot) {
-        var loadedProducts = [];
-        snapshot.forEach(function(doc) {
-            var data = doc.data();
-            // Пропускаем служебные документы
-            if (doc.id !== 'orders' && doc.id !== 'settings' && doc.id !== 'products') {
-                loadedProducts.push(data);
-            }
-        });
-
-        if (loadedProducts.length > 0) {
-            products = loadedProducts;
-            products.sort(function(a, b) { return a.id - b.id; });
-        } else {
-            // Проверяем старый формат
-            var oldDoc = snapshot.docs.find(function(d) { return d.id === 'products'; });
-            if (oldDoc && oldDoc.data().items) {
-                products = oldDoc.data().items;
-            } else {
-                products = getDefaultProducts();
-                saveProducts();
-            }
-        }
-
+function loadCatalog() {
+    return db.collection('products').where('active', '==', true).get().then(function(snapshot) {
+        products = snapshot.docs.map(function(doc) { return doc.data(); });
+        products.sort(function(a, b) { return a.id - b.id; });
+        if (products.length === 0) showToast('Каталог пока пуст');
         renderCategories();
         renderProducts();
         updateBadge();
     }).catch(function(e) {
-        console.log('Load error:', e);
-        products = getDefaultProducts();
+        console.log('Catalog load error:', e);
+        products = [];
         renderCategories();
         renderProducts();
         updateBadge();
+        document.getElementById('productGrid').innerHTML = '<p style="color:var(--txt2);grid-column:1/-1">Каталог временно недоступен. Проверьте подключение и обновите страницу.</p>';
+        showToast('Не удалось загрузить каталог');
     });
+}
 
-    // Загружаем заказы
-    db.collection('shop').doc('orders').get().then(function(doc) {
-        if (doc.exists && doc.data().items) {
-            orders = doc.data().items;
-        }
-    }).catch(function(e) { console.log('Orders load error:', e); });
-
-    // Загружаем настройки
-    db.collection('shop').doc('settings').get().then(function(doc) {
-        if (doc.exists) {
-            settings = doc.data();
-        }
+function loadPublicSettings() {
+    return db.collection('publicSettings').doc('store').get().then(function(doc) {
+        if (doc.exists && doc.data().whatsapp) settings.whatsapp = doc.data().whatsapp;
     }).catch(function(e) { console.log('Settings load error:', e); });
 }
 
-function getDefaultProducts() {
-    return [
-        {id:1,name:'Pilsner Urquell',price:850,price15:1200,price2:1500,unit:'л',category:'Пиво',emoji:'🍺',desc:'Классический чешский пильзнер.',tag:'Хит',image:''},
-        {id:2,name:'Guinness Draught',price:950,price15:1350,price2:1700,unit:'л',category:'Пиво',emoji:'🍺',desc:'Насыщенный стаут с кремовой пенкой.',tag:'',image:''},
-        {id:3,name:'Craft IPA',price:1100,price15:1550,price2:2000,unit:'л',category:'Пиво',emoji:'🍺',desc:'Местный крафт с тропическими нотами.',tag:'Новинка',image:''},
-        {id:4,name:'Corona Extra',price:750,price15:1050,price2:1350,unit:'л',category:'Пиво',emoji:'🍺',desc:'Мексиканское пиво с лаймом.',tag:'',image:''},
-        {id:5,name:'Heineken',price:700,price15:1000,price2:1300,unit:'л',category:'Пиво',emoji:'🍺',desc:'Нидерландский лагер.',tag:'',image:''},
-        {id:6,name:'Микс орехов',price:1200,unit:'кг',category:'Снеки',emoji:'🥜',desc:'Арахис, кешью, миндаль, фисташки.',tag:'Хит',image:''},
-        {id:7,name:'Чипсы с трюфелем',price:800,unit:'кг',category:'Снеки',emoji:'🍟',desc:'Тонкие чипсы с трюфельным маслом.',tag:'',image:''},
-        {id:8,name:'Сухарики',price:600,unit:'кг',category:'Снеки',emoji:'🥖',desc:'Хрустящие сухарики с чесноком.',tag:'',image:''},
-        {id:9,name:'Сушёная рыба',price:3500,unit:'кг',category:'Закуски',emoji:'🍣',desc:'Натуральная сушёная красная рыба.',tag:'Премиум',image:''},
-        {id:10,name:'Сырная тарелка',price:2500,unit:'шт',category:'Закуски',emoji:'🧀',desc:'Ассорти из 5 видов сыра.',tag:'',image:''},
-        {id:11,name:'Кола 0.5л',price:300,unit:'шт',category:'Напитки',emoji:'🥤',desc:'Coca-Cola, охлаждённая.',tag:'',image:''},
-        {id:12,name:'Вода',price:200,unit:'шт',category:'Напитки',emoji:'💧',desc:'Минеральная вода 0.5л.',tag:'',image:''}
-    ];
+function loadAdminData() {
+    return db.collection('orders').orderBy('createdAt', 'desc').limit(200).get().then(function(snapshot) {
+        orders = snapshot.docs.map(function(doc) {
+            return Object.assign({_docId: doc.id}, doc.data());
+        });
+        adminReady = true;
+        renderAdmin();
+    });
+}
+
+function loadData() {
+    loadCatalog();
+    loadPublicSettings();
 }
 
 // ===== SAVE TO FIREBASE =====
-function saveProducts() {
-    // Сохраняем каждый товар отдельно
-    var batch = db.batch();
-    products.forEach(function(p) {
-        var ref = db.collection('shop').doc('product_' + p.id);
-        var doc = {
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            unit: p.unit,
-            category: p.category,
-            desc: p.desc,
-            tag: p.tag || '',
-            emoji: p.emoji || '\uD83C\uDF7A',
-            image: p.image || ''
-        };
-        if (p.price15) doc.price15 = p.price15;
-        if (p.price2) doc.price2 = p.price2;
-        batch.set(ref, doc);
-    });
-    batch.commit().catch(function(e) { console.log('Save error:', e); });
+function productDocument(p) {
+    var doc = {
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        unit: p.unit,
+        category: p.category,
+        desc: p.desc,
+        tag: p.tag || '',
+        emoji: p.emoji || '🍺',
+        image: p.image || '',
+        active: p.active !== false,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if (p.price15) doc.price15 = p.price15;
+    if (p.price2) doc.price2 = p.price2;
+    return doc;
 }
 
-function saveOrders() {
-    db.collection('shop').doc('orders').set({items: orders}).catch(function(e){console.log('Save error:',e)});
+function saveProductToDb(product) {
+    return db.collection('products').doc(String(product.id)).set(productDocument(product));
 }
 
 function saveSettingsToDb() {
-    db.collection('shop').doc('settings').set(settings).catch(function(e){console.log('Save error:',e)});
+    return db.collection('publicSettings').doc('store').set({
+        whatsapp: settings.whatsapp,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 }
 
 function saveCart() {
@@ -417,6 +390,11 @@ function saveCart() {
 
 // ===== NAV =====
 function showPage(p) {
+    if (p === 'admin-login' && adminReady) p = 'admin';
+    if (p === 'admin' && !adminReady) {
+        showToast('Сначала войдите как администратор');
+        p = 'admin-login';
+    }
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active')});
     document.getElementById('page-' + p).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(function(n, i) {
@@ -430,14 +408,45 @@ function showPage(p) {
 
 // ===== ADMIN LOGIN =====
 function adminLogin() {
-    var l = document.getElementById('adminLogin').value.trim();
-    var p = document.getElementById('adminPassword').value;
-    if (l === (settings.adminLogin || 'admin') && p === (settings.adminPass || '12345')) {
-        showPage('admin');
-    } else {
-        showToast('Неверный логин или пароль');
-    }
+    var email = document.getElementById('adminLogin').value.trim();
+    var password = document.getElementById('adminPassword').value;
+    if (!email || !password) { showToast('Введите email и пароль'); return; }
+
+    auth.signInWithEmailAndPassword(email, password).catch(function(e) {
+        console.log('Admin login error:', e);
+        showToast('Не удалось войти или нет доступа');
+    });
 }
+
+function adminLogout() {
+    auth.signOut().then(function() {
+        adminReady = false;
+        orders = [];
+        showPage('admin-login');
+        showToast('Вы вышли из админки');
+    });
+}
+
+auth.onAuthStateChanged(function(user) {
+    if (!user) {
+        adminReady = false;
+        orders = [];
+        if (document.getElementById('page-admin').classList.contains('active')) showPage('admin-login');
+        return;
+    }
+    if (!adminReady) {
+        loadAdminData().then(function() {
+            document.getElementById('adminPassword').value = '';
+            if (document.getElementById('page-admin-login').classList.contains('active')) showPage('admin');
+        }).catch(function(e) {
+            console.log('Admin authorization error:', e);
+            adminReady = false;
+            orders = [];
+            auth.signOut();
+            showToast('У аккаунта нет доступа администратора');
+        });
+    }
+});
 
 // ===== ADMIN TABS =====
 function switchTab(t) {
@@ -450,11 +459,10 @@ function switchTab(t) {
 }
 
 function renderAdmin() {
+    if (!adminReady) return;
     renderAdminProducts();
     renderAdminOrders();
     document.getElementById('whatsappPhone').value = settings.whatsapp || '';
-    document.getElementById('setAdminLogin').value = settings.adminLogin || '';
-    document.getElementById('setAdminPass').value = '';
 }
 
 // ===== PRODUCTS =====
@@ -636,80 +644,130 @@ function renderCart() {
 }
 
 function showCheckout() {
-    document.getElementById('cartContent').innerHTML = '<div class="checkout-form"><h3>Оформление заказа</h3><div class="form-group"><label>Имя</label><input type="text" id="cName"></div><div class="form-group"><label>Телефон</label><input type="tel" id="cPhone"></div><div class="form-group"><label>Комментарий</label><textarea id="cComment" rows="2"></textarea></div><button class="btn btn-primary" onclick="placeOrder()">Подтвердить</button><button class="btn btn-outline" onclick="renderCart()" style="margin-top:8px">Назад</button></div>';
+    document.getElementById('cartContent').innerHTML = '<div class="checkout-form"><h3>Оформление заказа</h3><div class="form-group"><label>Имя</label><input type="text" id="cName"></div><div class="form-group"><label>Телефон</label><input type="tel" id="cPhone"></div><div class="form-group"><label>Комментарий</label><textarea id="cComment" rows="2"></textarea></div><button class="btn btn-primary" id="placeOrderBtn" onclick="placeOrder()">Подтвердить</button><button class="btn btn-outline" onclick="renderCart()" style="margin-top:8px">Назад</button></div>';
 }
 
 function placeOrder() {
     var name = document.getElementById('cName').value.trim();
     var phone = document.getElementById('cPhone').value.trim();
     var comment = document.getElementById('cComment').value.trim();
-    if (!name || !phone) { showToast('Заполните имя и телефон'); return; }
+    var button = document.getElementById('placeOrderBtn');
+    if (name.length < 2 || name.length > 100) { showToast('Проверьте имя'); return; }
+    if (!/^[0-9+() -]{7,24}$/.test(phone)) { showToast('Проверьте телефон'); return; }
+    if (comment.length > 500) { showToast('Комментарий слишком длинный'); return; }
+    if (cart.length === 0 || cart.length > 10) { showToast('В заказе должно быть от 1 до 10 позиций'); return; }
 
     var total = 0;
     var itemsText = '';
-    cart.forEach(function(c) {
+    var orderItems = [];
+    for (var i = 0; i < cart.length; i++) {
+        var c = cart[i];
         var p = products.find(function(x) { return x.id === c.id; });
-        var unitPrice = getUnitPrice(p, c.size || 1);
-        var lineTotal = unitPrice * (c.qty || 1);
+        var quantity = parseInt(c.qty) || 0;
+        var size = Number(c.size || 0);
+        if (!p || quantity < 1 || quantity > 50 || [0, 1, 1.5, 2].indexOf(size) < 0) {
+            showToast('В корзине есть недопустимая позиция');
+            return;
+        }
+        var unitPrice = getUnitPrice(p, size || 1);
+        var lineTotal = unitPrice * quantity;
         total += lineTotal;
-        var qtyLabel = c.size ? ' ' + c.size + '\u043B \u00D7 ' + c.qty : ' \u00D7 ' + c.qty;
-        itemsText += '\u2022 ' + p.name + qtyLabel + ' = ' + lineTotal + ' \u20B8\n';
-    });
+        var qtyLabel = size ? ' ' + size + 'л × ' + quantity : ' × ' + quantity;
+        itemsText += '• ' + p.name + qtyLabel + ' = ' + lineTotal + ' ₸\n';
+        orderItems.push({productId: p.id, quantity: quantity, size: size});
+    }
 
+    var clientOrderId = crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2, 18);
     var order = {
-        id: Date.now(),
-        name: name,
+        customerName: name,
         phone: phone,
         comment: comment,
-        items: cart.map(function(c) {
-            var p = products.find(function(x) { return x.id === c.id; });
-            return {name: p.name, qty: c.qty, size: c.size || 0, price: getUnitPrice(p, c.size || 1), unit: p.unit};
-        }),
-        total: total,
+        items: orderItems,
         status: 'new',
-        date: new Date().toLocaleString('ru-RU')
+        clientOrderId: clientOrderId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    orders.unshift(order);
-    cart = [];
-    saveProducts();
-    saveOrders();
-    saveCart();
-    updateBadge();
+    button.disabled = true;
+    button.textContent = 'Отправка...';
+    db.collection('orders').doc(clientOrderId).set(order).then(function() {
+        cart = [];
+        saveCart();
+        updateBadge();
 
-    // Формируем сообщение для WhatsApp
-    var msg = '🍺 *Новый заказ ПРАГА*\n\n';
-    msg += '📋 Заказ #' + order.id + '\n';
-    msg += '👤 Имя: ' + name + '\n';
-    msg += '📞 Телефон: ' + phone + '\n\n';
-    msg += '📦 *Заказ:*\n' + itemsText + '\n';
-    msg += '💰 *Итого: ' + total + ' &#8378;*\n';
-    if (comment) msg += '\n💬 Комментарий: ' + comment;
+        var msg = '🍺 *Новый заказ ПРАГА*\n\n';
+        msg += '📋 Заказ #' + clientOrderId.slice(0, 8) + '\n';
+        msg += '👤 Имя: ' + name + '\n';
+        msg += '📞 Телефон: ' + phone + '\n\n';
+        msg += '📦 *Заказ:*\n' + itemsText + '\n';
+        msg += '💰 *Итого: ' + total + ' ₸*\n';
+        if (comment) msg += '\n💬 Комментарий: ' + comment;
 
-    var url = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(msg);
-    document.getElementById('cartContent').innerHTML = '<div class="success-msg"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h2>Заказ оформлен!</h2><p style="color:var(--txt2);margin-top:8px">Заказ #' + order.id + '</p><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px"><a href="' + esc(url) + '" target="_blank" class="btn btn-primary" style="text-decoration:none;text-align:center">Отправить в WhatsApp</a><button class="btn btn-outline" onclick="showPage(\'home\')">На главную</button></div></div>';
+        var url = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(msg);
+        document.getElementById('cartContent').innerHTML = '<div class="success-msg"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h2>Заказ оформлен!</h2><p style="color:var(--txt2);margin-top:8px">Заказ #' + esc(clientOrderId.slice(0, 8)) + '</p><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px"><a href="' + esc(url) + '" target="_blank" rel="noopener" class="btn btn-primary" style="text-decoration:none;text-align:center">Отправить в WhatsApp</a><button class="btn btn-outline" onclick="showPage(\'home\')">На главную</button></div></div>';
+    }).catch(function(e) {
+        console.log('Order save error:', e);
+        button.disabled = false;
+        button.textContent = 'Подтвердить';
+        showToast('Не удалось оформить заказ. Попробуйте ещё раз');
+    });
 }
 
 // ===== ORDERS =====
+function orderItemDetails(item) {
+    var product = products.find(function(p) { return p.id === item.productId; });
+    var name = product ? product.name : 'Товар #' + item.productId;
+    var unitPrice = product ? getUnitPrice(product, item.size || 1) : 0;
+    return {
+        label: name + (item.size ? ' ' + item.size + 'л' : '') + ' × ' + item.quantity,
+        total: unitPrice * item.quantity
+    };
+}
+
+function orderDate(order) {
+    if (order.createdAt && order.createdAt.toDate) return order.createdAt.toDate().toLocaleString('ru-RU');
+    return '';
+}
+
 function renderAdminOrders() {
     var f = document.getElementById('orderFilter') ? document.getElementById('orderFilter').value : 'all';
     var list = f === 'all' ? orders : orders.filter(function(o) { return o.status === f; });
     document.getElementById('orderList').innerHTML = list.length === 0 ? '<p style="color:var(--txt3)">Заказов нет</p>' : list.map(function(o) {
-        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + o.id + ' \u2014 ' + esc(o.name) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + o.items.map(function(i) { return esc(i.name) + (i.size ? ' ' + i.size + '\u043B' : '') + ' \u00D7 ' + i.qty; }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + o.total + ' \u20B8</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(o.date) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(' + o.id + ',\'completed\')">Выдан</button>' : '') + '</div></div>';
+        var details = o.items.map(orderItemDetails);
+        var total = details.reduce(function(sum, item) { return sum + item.total; }, 0);
+        var id = esc(o._docId);
+        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + id.slice(0, 8) + ' — ' + esc(o.customerName) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + details.map(function(i) { return esc(i.label); }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + total + ' ₸</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(orderDate(o)) + ' • ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'completed\')">Выдан</button>' : '') + '</div></div>';
     }).join('');
 }
 
-function updateStatus(id, s) {
-    var o = orders.find(function(x) { return x.id === id; });
-    if (o) { o.status = s; saveOrders(); renderAdminOrders(); }
+function updateStatus(id, status) {
+    var order = orders.find(function(item) { return item._docId === id; });
+    if (!order) return;
+    db.collection('orders').doc(id).update({
+        status: status,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+        order.status = status;
+        renderAdminOrders();
+        showToast('Статус обновлён');
+    }).catch(function(e) {
+        console.log('Order update error:', e);
+        showToast('Не удалось обновить статус');
+    });
 }
 
 function exportOrdersExcel() {
     if (orders.length === 0) { showToast('Нет заказов для экспорта'); return; }
     var csv = '\uFEFFНомер;Имя;Телефон;Комментарий;Товары;Сумма;Статус;Дата\n';
     orders.forEach(function(o) {
-        var items = o.items.map(function(i) { return i.name + (i.size ? ' ' + i.size + '\u043B' : '') + ' x' + i.qty; }).join(', ');
-        csv += o.id + ';' + esc(o.name) + ';' + esc(o.phone) + ';' + esc(o.comment || '') + ';' + esc(items) + ';' + o.total + ';' + esc(o.status) + ';' + esc(o.date) + '\n';
+        var details = o.items.map(orderItemDetails);
+        var items = details.map(function(item) { return item.label; }).join(', ');
+        var total = details.reduce(function(sum, item) { return sum + item.total; }, 0);
+        var cells = [o._docId, o.customerName, o.phone, o.comment || '', items, total, o.status, orderDate(o)];
+        csv += cells.map(function(value) { return '"' + String(value).replace(/"/g, '""') + '"'; }).join(';') + '\n';
     });
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     var url = URL.createObjectURL(blob);
@@ -719,15 +777,6 @@ function exportOrdersExcel() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('Файл скачан');
-}
-
-function clearOrders() {
-    if (orders.length === 0) { showToast('Заказов нет'); return; }
-    if (!confirm('Удалить ВСЕ заказы? (' + orders.length + ' шт.)')) return;
-    orders = [];
-    saveOrders();
-    renderAdminOrders();
-    showToast('Заказы очищены');
 }
 
 // ===== ADMIN PRODUCTS =====
@@ -848,60 +897,71 @@ function hideProductForm() {
 function saveProduct() {
     var name = document.getElementById('prodName').value.trim();
     var cat = document.getElementById('prodCategory').value;
-    var isBeer = cat === '\u041F\u0438\u0432\u043E';
+    var isBeer = cat === 'Пиво';
     var price = isBeer ? parseInt(document.getElementById('prodPrice1').value) : parseInt(document.getElementById('prodPrice').value);
     if (!name || !price) { showToast('Заполните название и цену'); return; }
     var data = {
+        id: editId || Date.now(),
         name: name,
         price: price,
-        unit: isBeer ? '\u043B' : document.getElementById('prodUnit').value,
+        unit: isBeer ? 'л' : document.getElementById('prodUnit').value,
         category: cat,
         desc: document.getElementById('prodDesc').value.trim(),
         tag: document.getElementById('prodTag').value.trim(),
         image: document.getElementById('prodImage').value,
-        emoji: '\uD83C\uDF7A'
+        emoji: '🍺',
+        active: true
     };
     if (isBeer) {
         data.price15 = parseInt(document.getElementById('prodPrice15').value) || 0;
         data.price2 = parseInt(document.getElementById('prodPrice2').value) || 0;
     }
-    if (editId) {
-        var idx = products.findIndex(function(x) { return x.id === editId; });
-        if (idx >= 0) Object.assign(products[idx], data);
-    } else {
-        data.id = Date.now();
-        products.push(data);
-    }
-    saveProducts();
-    hideProductForm();
-    renderProducts();
-    renderAdminProducts();
-    renderCategories();
-    showToast(editId ? 'Товар обновлён' : 'Товар добавлен');
+
+    var wasEditing = !!editId;
+    saveProductToDb(data).then(function() {
+        var idx = products.findIndex(function(x) { return x.id === data.id; });
+        if (idx >= 0) products[idx] = data;
+        else products.push(data);
+        products.sort(function(a, b) { return a.id - b.id; });
+        hideProductForm();
+        renderProducts();
+        renderAdminProducts();
+        renderCategories();
+        showToast(wasEditing ? 'Товар обновлён' : 'Товар добавлен');
+    }).catch(function(e) {
+        console.log('Product save error:', e);
+        showToast('Не удалось сохранить товар');
+    });
 }
 
 function deleteProduct(id) {
     if (!confirm('Удалить?')) return;
-    products = products.filter(function(p) { return p.id !== id; });
-    cart = cart.filter(function(c) { return c.id !== id; });
-    db.collection('shop').doc('product_' + id).delete().catch(function(e) { console.log('Delete error:', e); });
-    saveProducts();
-    saveCart();
-    renderProducts();
-    renderAdminProducts();
-    renderCategories();
-    updateBadge();
+    db.collection('products').doc(String(id)).delete().then(function() {
+        products = products.filter(function(p) { return p.id !== id; });
+        cart = cart.filter(function(c) { return c.id !== id; });
+        saveCart();
+        renderProducts();
+        renderAdminProducts();
+        renderCategories();
+        updateBadge();
+        showToast('Товар удалён');
+    }).catch(function(e) {
+        console.log('Product delete error:', e);
+        showToast('Не удалось удалить товар');
+    });
 }
 
 // ===== SETTINGS =====
 function saveSettings() {
-    settings.whatsapp = document.getElementById('whatsappPhone').value;
-    var newLogin = document.getElementById('setAdminLogin').value.trim();
-    var newPass = document.getElementById('setAdminPass').value;
-    if (newLogin) settings.adminLogin = newLogin;
-    if (newPass) settings.adminPass = newPass;
-    saveSettingsToDb();
-    showToast('Настройки сохранены');
+    var whatsapp = document.getElementById('whatsappPhone').value.replace(/\D/g, '');
+    if (!/^[0-9]{10,15}$/.test(whatsapp)) { showToast('Проверьте номер WhatsApp'); return; }
+    settings.whatsapp = whatsapp;
+    saveSettingsToDb().then(function() {
+        showToast('Настройки сохранены');
+    }).catch(function(e) {
+        console.log('Settings save error:', e);
+        showToast('Не удалось сохранить настройки');
+    });
 }
 
 // ===== UTILS =====
