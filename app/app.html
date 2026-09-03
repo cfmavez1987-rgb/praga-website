@@ -233,7 +233,8 @@
                 <h3 id="formTitle">Добавить товар</h3>
                 <div class="checkout-form" style="margin-top:16px">
                     <div class="form-group"><label>Название</label><input type="text" id="prodName"></div>
-                    <div class="form-group"><label>Категория</label><select id="prodCategory" onchange="togglePriceFields()"><option>Пиво</option><option>Снеки</option><option>Закуски</option><option>Напитки</option></select></div>
+                    <div class="form-group"><label>Категория</label><select id="prodCategory" onchange="togglePriceFields();toggleSubcategory()"><option>Пиво</option><option>Снеки</option><option>Закуски</option><option>Напитки</option></select></div>
+                    <div class="form-group" id="subcategoryGroup"><label>Тип</label><select id="prodSubcategory"><option value="Разливное">Разливное</option><option value="Бутылочное">Бутылочное</option></select></div>
                     <div id="priceSingle" class="form-row" style="display:none">
                         <div class="form-group"><label>Цена (₸)</label><input type="number" id="prodPrice"></div>
                         <div class="form-group"><label>Единица</label><select id="prodUnit"><option value="кг">за кг</option><option value="шт">за штуку</option></select></div>
@@ -301,6 +302,7 @@ var cart = JSON.parse(localStorage.getItem('praga_cart')) || [];
 var orders = [];
 var settings = {whatsapp:'77020615722'};
 var currentCat = 'Все';
+var currentSub = '';
 var editId = null;
 var selectedSize = 1;
 var adminReady = false;
@@ -374,6 +376,7 @@ function productDocument(p) {
     };
     if (p.price15) doc.price15 = p.price15;
     if (p.price2) doc.price2 = p.price2;
+    if (p.subcategory) doc.subcategory = p.subcategory;
     return doc;
 }
 
@@ -475,23 +478,33 @@ function renderProducts() {
     var f = products.filter(function(p) {
         var mc = currentCat === 'Все' || p.category === currentCat;
         var ms = p.name.toLowerCase().indexOf(s) >= 0 || p.desc.toLowerCase().indexOf(s) >= 0;
-        return mc && ms;
+        var sub = !currentSub || !p.subcategory || p.subcategory === currentSub;
+        return mc && ms && sub;
     });
     document.getElementById('productGrid').innerHTML = f.map(function(p) {
         var priceDisplay = isSized(p.category) ? '\u043E\u0442 ' + p.price + ' <small>\u20B8</small>' : p.price + ' <small>\u20B8/' + esc(p.unit) + '</small>';
         var addBtn = isSized(p.category)
             ? ''
             : '<button class="cart-add-btn" onclick="event.stopPropagation();addCart(' + p.id + ')">+</button>';
-        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + esc(p.category) + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span>' + addBtn + '</div></div></div>';
+        var meta = p.subcategory ? esc(p.category) + ' \u2022 ' + esc(p.subcategory) : esc(p.category);
+        return '<div class="product-card" onclick="showDetail(' + p.id + ')"><div class="product-thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + '</div><div class="product-details"><h4>' + esc(p.name) + '</h4><div class="product-meta">' + meta + '</div><div class="product-bottom"><span class="product-price">' + priceDisplay + '</span>' + addBtn + '</div></div></div>';
     }).join('');
 }
 
 function renderCategories() {
     var cats = ['Все'];
     products.forEach(function(p) { if (cats.indexOf(p.category) < 0) cats.push(p.category); });
-    document.getElementById('categories').innerHTML = cats.map(function(c) {
-        return '<button class="cat-btn ' + (c === currentCat ? 'active' : '') + '" onclick="currentCat=\'' + esc(c) + '\';renderCategories();renderProducts()">' + esc(c) + '</button>';
+    var html = cats.map(function(c) {
+        return '<button class="cat-btn ' + (c === currentCat ? 'active' : '') + '" onclick="currentCat=\'' + esc(c) + '\';currentSub=\'\';renderCategories();renderProducts()">' + esc(c) + '</button>';
     }).join('');
+    if (currentCat === '\u041F\u0438\u0432\u043E' || currentCat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') {
+        var subs = ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435'];
+        html += '<span style="color:var(--txt3);padding:8px 4px">|</span>';
+        html += subs.map(function(s) {
+            return '<button class="cat-btn ' + (currentSub === s ? 'active' : '') + '" onclick="currentSub=\'' + s + '\';renderCategories();renderProducts()">' + s + '</button>';
+        }).join('');
+    }
+    document.getElementById('categories').innerHTML = html;
 }
 
 // ===== DETAIL =====
@@ -506,7 +519,7 @@ function showDetail(id) {
     } else {
         controls = '<div class="price-row"><span class="price-big">' + p.price + ' <small>\u20B8/' + esc(p.unit) + '</small></span><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1,' + id + ')">\u2212</button><span class="qty-value" id="mQty">1</span><button class="qty-btn" onclick="changeQty(1,' + id + ')">+</button></div></div>';
     }
-    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + '</div><div class="desc">' + esc(p.desc) + '</div>' + controls + '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В \u043A\u043E\u0440\u0437\u0438\u043D\u0443</button></div>';
+    document.getElementById('modalContent').innerHTML = '<div class="modal-handle"></div><div class="modal-image">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="modal-body"><h2>' + esc(p.name) + '</h2><div class="meta">' + esc(p.category) + (p.subcategory ? ' \u2022 ' + esc(p.subcategory) : '') + '</div><div class="desc">' + esc(p.desc) + '</div>' + controls + '<button class="btn btn-primary" onclick="addCartFromModal(' + id + ')">В \u043A\u043E\u0440\u0437\u0438\u043D\u0443</button></div>';
     document.getElementById('modal').classList.add('active');
 }
 
@@ -786,7 +799,8 @@ function exportOrdersExcel() {
 // ===== ADMIN PRODUCTS =====
 function renderAdminProducts() {
     document.getElementById('productList').innerHTML = products.map(function(p) {
-        return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">\u270E</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">\uD83D\uDDD1</button></div></div>';
+        var sub = p.subcategory ? ' \u2022 ' + esc(p.subcategory) : '';
+        return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + sub + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">\u270E</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">\uD83D\uDDD1</button></div></div>';
     }).join('');
 }
 
@@ -839,6 +853,11 @@ function togglePriceFields() {
     document.getElementById('priceBeer').style.display = sized ? '' : 'none';
 }
 
+function toggleSubcategory() {
+    var cat = document.getElementById('prodCategory').value;
+    document.getElementById('subcategoryGroup').style.display = (cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') ? '' : 'none';
+}
+
 function getUnitPrice(p, size) {
     if (isSized(p.category)) {
         if (size === 1.5 && p.price15) return p.price15;
@@ -859,11 +878,13 @@ function showAddProduct() {
     document.getElementById('prodPrice2').value = '';
     document.getElementById('prodUnit').value = 'кг';
     document.getElementById('prodCategory').value = 'Пиво';
+    document.getElementById('prodSubcategory').value = 'Разливное';
     document.getElementById('prodDesc').value = '';
     document.getElementById('prodTag').value = '';
     document.getElementById('prodImage').value = '';
     document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
     togglePriceFields();
+    toggleSubcategory();
     document.querySelectorAll('.admin-section').forEach(function(s) { s.classList.remove('active'); });
     document.getElementById('sec-product-form').classList.add('active');
 }
@@ -880,6 +901,7 @@ function editProduct(id) {
     document.getElementById('prodPrice2').value = p.price2 || '';
     document.getElementById('prodUnit').value = p.unit;
     document.getElementById('prodCategory').value = p.category;
+    document.getElementById('prodSubcategory').value = p.subcategory || 'Разливное';
     document.getElementById('prodDesc').value = p.desc;
     document.getElementById('prodTag').value = p.tag;
     document.getElementById('prodImage').value = p.image || '';
@@ -889,6 +911,7 @@ function editProduct(id) {
         document.getElementById('photoPreview').innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>Нажмите для загрузки</span>';
     }
     togglePriceFields();
+    toggleSubcategory();
     document.querySelectorAll('.admin-section').forEach(function(s) { s.classList.remove('active'); });
     document.getElementById('sec-product-form').classList.add('active');
 }
@@ -910,6 +933,7 @@ function saveProduct() {
         price: price,
         unit: isBeer ? 'л' : document.getElementById('prodUnit').value,
         category: cat,
+        subcategory: (cat === '\u041F\u0438\u0432\u043E' || cat === '\u041D\u0430\u043F\u0438\u0442\u043A\u0438') ? document.getElementById('prodSubcategory').value : '',
         desc: document.getElementById('prodDesc').value.trim(),
         tag: document.getElementById('prodTag').value.trim(),
         image: document.getElementById('prodImage').value,
