@@ -22,7 +22,7 @@ service cloud.firestore {
         ])
         && data.keys().hasOnly([
           'id', 'name', 'price', 'price15', 'price2', 'unit', 'category',
-          'desc', 'tag', 'emoji', 'image', 'active', 'updatedAt'
+          'subcategory', 'desc', 'tag', 'emoji', 'image', 'active', 'updatedAt'
         ])
         && data.id is int && data.id > 0
         && isShortString(data.name, 120) && data.name.size() > 0
@@ -31,6 +31,7 @@ service cloud.firestore {
         && (!('price2' in data) || isPrice(data.price2))
         && isShortString(data.unit, 20) && data.unit.size() > 0
         && isShortString(data.category, 80) && data.category.size() > 0
+        && (!('subcategory' in data) || isShortString(data.subcategory, 80))
         && isShortString(data.desc, 1000)
         && isShortString(data.tag, 80)
         && isShortString(data.emoji, 16)
