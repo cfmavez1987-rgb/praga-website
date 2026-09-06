@@ -494,9 +494,10 @@ function renderProducts() {
         return mc && ms && sub;
     });
     if ((currentCat === '\u0421\u043D\u0435\u043A\u0438' || currentCat === '\u0420\u044B\u0431\u0430') && !currentSub) {
-        var subOrder = ['\u0421\u0435\u043C\u0435\u0447\u043A\u0438', '\u041E\u0440\u0435\u0445\u0438', '\u0421\u0443\u0445\u0430\u0440\u0438\u043A\u0438', '\u0427\u0438\u043F\u0441\u044B', '\u041A\u043E\u043B\u0431\u0430\u0441\u043A\u0438', '\u041A\u0443\u0440\u0442', '\u0427\u0435\u0447\u0435\u043B'];
+        var allSubs = [];
+        f.forEach(function(p) { if (p.subcategory && allSubs.indexOf(p.subcategory) < 0) allSubs.push(p.subcategory); });
         var html = '';
-        subOrder.forEach(function(sub) {
+        allSubs.forEach(function(sub) {
             var group = f.filter(function(p) { return p.subcategory === sub; });
             if (group.length > 0) {
                 html += '<div style="grid-column:1/-1;margin:8px 0 4px"><h3 style="font-size:1rem;color:var(--amber)">' + esc(sub) + '</h3></div>';
