@@ -521,12 +521,13 @@ function renderCategories() {
         return '<button class="cat-btn ' + (c === currentCat ? 'active' : '') + '" onclick="currentCat=\'' + esc(c) + '\';currentSub=\'\';renderCategories();renderProducts()">' + esc(c) + '</button>';
     }).join('');
     var subEl = document.getElementById('subcategories');
-    var subMap = {
-        '\u041F\u0438\u0432\u043E': ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435'],
-        '\u041D\u0430\u043F\u0438\u0442\u043A\u0438': ['\u0420\u0430\u0437\u043B\u0438\u0432\u043D\u043E\u0435', '\u0411\u0443\u0442\u044B\u043B\u043E\u0447\u043D\u043E\u0435']
-    };
-    var subs = subMap[currentCat];
-    if (subs) {
+    var subs = [];
+    if (currentCat !== '\u0412\u0441\u0435') {
+        products.forEach(function(p) {
+            if (p.category === currentCat && p.subcategory && subs.indexOf(p.subcategory) < 0) subs.push(p.subcategory);
+        });
+    }
+    if (subs.length > 0) {
         subEl.innerHTML = subs.map(function(s) {
             return '<button class="cat-btn ' + (currentSub === s ? 'active' : '') + '" onclick="currentSub=\'' + s + '\';renderCategories();renderProducts()">' + s + '</button>';
         }).join('');
