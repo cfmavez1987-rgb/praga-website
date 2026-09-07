@@ -715,7 +715,9 @@ function placeOrder() {
         var p = products.find(function(x) { return x.id === c.id; });
         var quantity = parseInt(c.qty) || 0;
         var size = Number(c.size || 0);
-        if (!p || quantity < 1 || quantity > 50 || [0, 1, 1.5, 2].indexOf(size) < 0) {
+        var validSizes = [0, 1, 1.5, 2];
+        var sizeValid = validSizes.some(function(s) { return Math.abs(s - size) < 0.01; });
+        if (!p || quantity < 1 || quantity > 50 || !sizeValid) {
             showToast('В корзине есть недопустимая позиция');
             return;
         }
