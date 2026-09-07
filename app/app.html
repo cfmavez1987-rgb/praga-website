@@ -220,6 +220,7 @@
                             <option value="ready">Готовы</option>
                         </select>
                         <button class="btn btn-outline" style="width:auto;padding:8px 14px;font-size:0.8rem" onclick="exportOrdersExcel()">Excel</button>
+                        <button class="btn btn-danger" style="width:auto;padding:8px 14px;font-size:0.8rem" onclick="clearAllOrders()">Очистить</button>
                     </div>
                 </div>
                 <div id="orderList"></div>
@@ -787,7 +788,7 @@ function renderAdminOrders() {
         var details = o.items.map(orderItemDetails);
         var total = details.reduce(function(sum, item) { return sum + item.total; }, 0);
         var id = esc(o._docId);
-        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + id.slice(0, 8) + ' — ' + esc(o.customerName) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + details.map(function(i) { return esc(i.label); }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + total + ' ₸</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(orderDate(o)) + ' • ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'completed\')">Выдан</button>' : '') + '</div></div>';
+        return '<div style="background:var(--card);border:1px solid var(--brd);border-radius:var(--radius);padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><strong>#' + id.slice(0, 8) + ' — ' + esc(o.customerName) + '</strong><span style="padding:4px 10px;border-radius:6px;font-size:0.75rem;background:rgba(212,148,10,0.15);color:var(--amber)">' + esc(o.status) + '</span></div><div style="font-size:0.85rem;color:var(--txt2)">' + details.map(function(i) { return esc(i.label); }).join(', ') + '</div><div style="font-weight:700;color:var(--amber);margin-top:8px">' + total + ' ₸</div><div style="font-size:0.8rem;color:var(--txt3);margin-top:4px">' + esc(orderDate(o)) + ' \u2022 ' + esc(o.phone) + '</div><div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">' + (o.status === 'new' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'preparing\')">В работу</button>' : '') + (o.status === 'preparing' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'ready\')">Готов</button>' : '') + (o.status === 'ready' ? '<button class="btn btn-outline" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="updateStatus(\'' + id + '\',\'completed\')">Выдан</button>' : '') + '<button class="btn btn-danger" style="width:auto;padding:6px 12px;font-size:0.8rem" onclick="deleteOrder(\'' + id + '\')">Удалить</button></div></div>';
     }).join('');
 }
 
@@ -804,6 +805,35 @@ function updateStatus(id, status) {
     }).catch(function(e) {
         console.log('Order update error:', e);
         showToast('Не удалось обновить статус');
+    });
+}
+
+function deleteOrder(id) {
+    if (!confirm('Удалить заказ?')) return;
+    db.collection('orders').doc(id).delete().then(function() {
+        orders = orders.filter(function(o) { return o._docId !== id; });
+        renderAdminOrders();
+        showToast('Заказ удалён');
+    }).catch(function(e) {
+        console.log('Delete order error:', e);
+        showToast('Не удалось удалить заказ');
+    });
+}
+
+function clearAllOrders() {
+    if (orders.length === 0) { showToast('Заказов нет'); return; }
+    if (!confirm('Удалить ВСЕ заказы? (' + orders.length + ' шт.)')) return;
+    var batch = db.batch();
+    orders.forEach(function(o) {
+        batch.delete(db.collection('orders').doc(o._docId));
+    });
+    batch.commit().then(function() {
+        orders = [];
+        renderAdminOrders();
+        showToast('Все заказы удалены');
+    }).catch(function(e) {
+        console.log('Clear orders error:', e);
+        showToast('Не удалось удалить заказы');
     });
 }
 
