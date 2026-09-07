@@ -58,15 +58,20 @@ service cloud.firestore {
         && (item.size == 0 || item.size == 1 || item.size == 1.5 || item.size == 2);
     }
 
+    function isSizedProduct(product) {
+      return (product.category == 'Пиво' || product.category == 'Напитки')
+        && (!('subcategory' in product) || product.subcategory != 'Бутылочное');
+    }
+
     function validCatalogOrderItem(item) {
       let product = get(/databases/$(database)/documents/products/$(string(item.productId))).data;
       return product.active == true
         && (
-          (product.category != 'Пиво' && item.size == 0)
-          || (product.category == 'Пиво' && item.size == 1)
-          || (product.category == 'Пиво' && item.size == 1.5
+          (!isSizedProduct(product) && item.size == 0)
+          || (isSizedProduct(product) && item.size == 1)
+          || (isSizedProduct(product) && item.size == 1.5
             && 'price15' in product && product.price15 > 0)
-          || (product.category == 'Пиво' && item.size == 2
+          || (isSizedProduct(product) && item.size == 2
             && 'price2' in product && product.price2 > 0)
         );
     }
