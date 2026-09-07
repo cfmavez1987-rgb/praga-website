@@ -48,36 +48,6 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
-    function validOrderItem(item) {
-      return item is map
-        && item.keys().hasAll(['productId', 'quantity', 'size'])
-        && item.keys().hasOnly(['productId', 'quantity', 'size'])
-        && item.productId is int && item.productId > 0
-        && item.quantity is int && item.quantity >= 1 && item.quantity <= 50
-        && item.size is number
-        && (item.size == 0 || item.size == 1 || item.size == 1.5 || item.size == 2);
-    }
-
-    function validCatalogOrderItem(item) {
-      let product = get(/databases/$(database)/documents/products/$(string(item.productId))).data;
-      return product.active == true;
-    }
-
-    function validOrderItems(items) {
-      return items is list
-        && items.size() >= 1 && items.size() <= 10
-        && validOrderItem(items[0]) && validCatalogOrderItem(items[0])
-        && (items.size() < 2 || (validOrderItem(items[1]) && validCatalogOrderItem(items[1])))
-        && (items.size() < 3 || (validOrderItem(items[2]) && validCatalogOrderItem(items[2])))
-        && (items.size() < 4 || (validOrderItem(items[3]) && validCatalogOrderItem(items[3])))
-        && (items.size() < 5 || (validOrderItem(items[4]) && validCatalogOrderItem(items[4])))
-        && (items.size() < 6 || (validOrderItem(items[5]) && validCatalogOrderItem(items[5])))
-        && (items.size() < 7 || (validOrderItem(items[6]) && validCatalogOrderItem(items[6])))
-        && (items.size() < 8 || (validOrderItem(items[7]) && validCatalogOrderItem(items[7])))
-        && (items.size() < 9 || (validOrderItem(items[8]) && validCatalogOrderItem(items[8])))
-        && (items.size() < 10 || (validOrderItem(items[9]) && validCatalogOrderItem(items[9])));
-    }
-
     function validNewOrder(data) {
       return data.keys().hasAll([
           'customerName', 'phone', 'comment', 'items', 'status',
@@ -90,7 +60,7 @@ service cloud.firestore {
         && isShortString(data.customerName, 100) && data.customerName.size() >= 2
         && data.phone is string && data.phone.matches('^[0-9+() -]{7,24}$')
         && isShortString(data.comment, 500)
-        && validOrderItems(data.items)
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 10
         && data.status == 'new'
         && data.clientOrderId is string
         && data.clientOrderId.matches('^[A-Za-z0-9_-]{16,80}$')
