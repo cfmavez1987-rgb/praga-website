@@ -49,21 +49,10 @@ service cloud.firestore {
     }
 
     function validNewOrder(data) {
-      return data.keys().hasAll([
-          'customerName', 'phone', 'comment', 'items', 'status',
-          'clientOrderId', 'createdAt', 'updatedAt'
-        ])
-        && data.keys().hasOnly([
-          'customerName', 'phone', 'comment', 'items', 'status',
-          'clientOrderId', 'createdAt', 'updatedAt'
-        ])
-        && isShortString(data.customerName, 100) && data.customerName.size() >= 2
-        && data.phone is string && data.phone.matches('^[0-9+() -]{7,24}$')
-        && isShortString(data.comment, 500)
-        && data.items is list && data.items.size() >= 1 && data.items.size() <= 10
+      return data.customerName is string && data.customerName.size() >= 2
+        && data.phone is string
         && data.status == 'new'
-        && data.clientOrderId is string
-        && data.clientOrderId.matches('^[A-Za-z0-9_-]{16,80}$');
+        && data.clientOrderId is string;
     }
 
     match /products/{productId} {
@@ -85,8 +74,7 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if request.auth == null
-        && validNewOrder(request.resource.data)
+      allow create: if validNewOrder(request.resource.data)
         && orderId == request.resource.data.clientOrderId;
       allow read: if isSignedInAdmin();
       allow update: if isSignedInAdmin()
