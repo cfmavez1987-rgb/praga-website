@@ -741,21 +741,21 @@ function placeOrder() {
 
     button.disabled = true;
     button.textContent = 'Отправка...';
+    var msg = '🍺 *Новый заказ ПРАГА*\n\n';
+    msg += '📋 Заказ #' + clientOrderId.slice(0, 8) + '\n';
+    msg += '👤 Имя: ' + name + '\n';
+    msg += '📞 Телефон: ' + phone + '\n\n';
+    msg += '📦 *Заказ:*\n' + itemsText + '\n';
+    msg += '💰 *Итого: ' + total + ' ₸*\n';
+    if (comment) msg += '\n💬 Комментарий: ' + comment;
+    var waUrl = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(msg);
+
     db.collection('orders').doc(clientOrderId).set(order).then(function() {
         cart = [];
         saveCart();
         updateBadge();
-
-        var msg = '🍺 *Новый заказ ПРАГА*\n\n';
-        msg += '📋 Заказ #' + clientOrderId.slice(0, 8) + '\n';
-        msg += '👤 Имя: ' + name + '\n';
-        msg += '📞 Телефон: ' + phone + '\n\n';
-        msg += '📦 *Заказ:*\n' + itemsText + '\n';
-        msg += '💰 *Итого: ' + total + ' ₸*\n';
-        if (comment) msg += '\n💬 Комментарий: ' + comment;
-
-        var url = 'https://wa.me/' + settings.whatsapp + '?text=' + encodeURIComponent(msg);
-        document.getElementById('cartContent').innerHTML = '<div class="success-msg"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h2>Заказ оформлен!</h2><p style="color:var(--txt2);margin-top:8px">Заказ #' + esc(clientOrderId.slice(0, 8)) + '</p><div style="margin-top:20px;display:flex;flex-direction:column;gap:10px"><a href="' + esc(url) + '" target="_blank" rel="noopener" class="btn btn-primary" style="text-decoration:none;text-align:center">Отправить в WhatsApp</a><button class="btn btn-outline" onclick="showPage(\'home\')">На главную</button></div></div>';
+        window.location.href = waUrl;
+        document.getElementById('cartContent').innerHTML = '<div class="success-msg"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#27AE60" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h2>Заказ оформлен!</h2><p style="color:var(--txt2);margin-top:8px">Переход в WhatsApp...</p><div style="margin-top:20px"><a href="' + esc(waUrl) + '" class="btn btn-primary" style="text-decoration:none;text-align:center;display:block">Открыть WhatsApp</a></div></div>';
     }).catch(function(e) {
         console.log('Order save error:', e);
         button.disabled = false;
