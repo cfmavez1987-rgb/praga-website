@@ -723,7 +723,7 @@ function placeOrder() {
         total += lineTotal;
         var qtyLabel = size ? ' ' + size + 'л × ' + quantity : ' × ' + quantity;
         itemsText += '• ' + p.name + qtyLabel + ' = ' + lineTotal + ' ₸\n';
-        orderItems.push({productId: p.id, quantity: quantity, size: size});
+        orderItems.push({productId: parseInt(p.id), quantity: quantity, size: size});
     }
 
     var clientOrderId = crypto.randomUUID
