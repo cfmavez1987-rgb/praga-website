@@ -63,9 +63,7 @@ service cloud.firestore {
         && data.items is list && data.items.size() >= 1 && data.items.size() <= 10
         && data.status == 'new'
         && data.clientOrderId is string
-        && data.clientOrderId.matches('^[A-Za-z0-9_-]{16,80}$')
-        && data.createdAt == request.time
-        && data.updatedAt == request.time;
+        && data.clientOrderId.matches('^[A-Za-z0-9_-]{16,80}$');
     }
 
     match /products/{productId} {
