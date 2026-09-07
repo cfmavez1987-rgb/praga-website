@@ -713,14 +713,9 @@ function placeOrder() {
     for (var i = 0; i < cart.length; i++) {
         var c = cart[i];
         var p = products.find(function(x) { return x.id === c.id; });
-        var quantity = parseInt(c.qty) || 0;
-        var size = Number(c.size || 0);
-        var validSizes = [0, 1, 1.5, 2];
-        var sizeValid = validSizes.some(function(s) { return Math.abs(s - size) < 0.01; });
-        if (!p || quantity < 1 || quantity > 50 || !sizeValid) {
-            showToast('В корзине есть недопустимая позиция');
-            return;
-        }
+        if (!p) continue;
+        var quantity = parseInt(c.qty) || 1;
+        var size = parseFloat(c.size) || 0;
         var unitPrice = getUnitPrice(p, size || 1);
         var lineTotal = unitPrice * quantity;
         total += lineTotal;
@@ -728,6 +723,7 @@ function placeOrder() {
         itemsText += '• ' + p.name + qtyLabel + ' = ' + lineTotal + ' ₸\n';
         orderItems.push({productId: parseInt(p.id), quantity: quantity, size: size});
     }
+    if (orderItems.length === 0) { showToast('Корзина пуста'); return; }
 
     var clientOrderId = crypto.randomUUID
         ? crypto.randomUUID()
