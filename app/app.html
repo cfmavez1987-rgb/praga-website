@@ -207,6 +207,8 @@
                     <h3>Товары</h3>
                     <button class="add-product-btn" onclick="showAddProduct()">+ Добавить</button>
                 </div>
+                <div class="categories" id="adminCategories"></div>
+                <div class="subcategories" id="adminSubcategories"></div>
                 <div id="productList"></div>
             </div>
 
@@ -309,6 +311,8 @@ var orders = [];
 var settings = {whatsapp:'77020615722'};
 var currentCat = 'Все';
 var currentSub = '';
+var adminCat = 'Все';
+var adminSub = '';
 var editId = null;
 var selectedSize = 1;
 var adminReady = false;
@@ -474,6 +478,7 @@ function switchTab(t) {
 
 function renderAdmin() {
     if (!adminReady) return;
+    renderAdminFilters();
     renderAdminProducts();
     renderAdminOrders();
     document.getElementById('whatsappPhone').value = settings.whatsapp || '';
@@ -868,8 +873,37 @@ function exportOrdersExcel() {
 }
 
 // ===== ADMIN PRODUCTS =====
+function renderAdminFilters() {
+    var cats = ['Все'];
+    products.forEach(function(p) { if (cats.indexOf(p.category) < 0) cats.push(p.category); });
+    document.getElementById('adminCategories').innerHTML = cats.map(function(c) {
+        return '<button class="cat-btn ' + (c === adminCat ? 'active' : '') + '" onclick="adminCat=\'' + esc(c) + '\';adminSub=\'\';renderAdminFilters();renderAdminProducts()">' + esc(c) + '</button>';
+    }).join('');
+    var subEl = document.getElementById('adminSubcategories');
+    var subs = [];
+    if (adminCat !== '\u0412\u0441\u0435') {
+        products.forEach(function(p) {
+            if (p.category === adminCat && p.subcategory && subs.indexOf(p.subcategory) < 0) subs.push(p.subcategory);
+        });
+    }
+    if (subs.length > 0) {
+        subEl.innerHTML = subs.map(function(s) {
+            return '<button class="cat-btn ' + (adminSub === s ? 'active' : '') + '" onclick="adminSub=\'' + s + '\';renderAdminFilters();renderAdminProducts()">' + s + '</button>';
+        }).join('');
+        subEl.style.display = '';
+    } else {
+        subEl.innerHTML = '';
+        subEl.style.display = 'none';
+    }
+}
+
 function renderAdminProducts() {
-    document.getElementById('productList').innerHTML = products.map(function(p) {
+    var f = products.filter(function(p) {
+        var mc = adminCat === '\u0412\u0441\u0435' || p.category === adminCat;
+        var sub = !adminSub || p.subcategory === adminSub;
+        return mc && sub;
+    });
+    document.getElementById('productList').innerHTML = f.map(function(p) {
         var sub = p.subcategory ? ' \u2022 ' + esc(p.subcategory) : '';
         return '<div class="admin-product-item"><div class="thumb">' + (p.image ? '<img src="' + esc(p.image) + '">' : esc(p.emoji)) + '</div><div class="info"><h4>' + esc(p.name) + '</h4><span class="price">' + p.price + ' \u20B8/' + esc(p.unit) + sub + '</span></div><div class="actions"><button class="edit-btn" onclick="editProduct(' + p.id + ')">\u270E</button><button class="delete-btn" onclick="deleteProduct(' + p.id + ')">\uD83D\uDDD1</button></div></div>';
     }).join('');
